@@ -9,9 +9,8 @@ clean-up:
 
 debug:
 	@echo "\e[1m\033[32m\nDebug mode\e[0m"
-	make clean-up
 	docker run -it -v ${PWD}:${APP_DIR} -w ${APP_DIR} \
-		-p 8091:8091 --name ${APP_NAME} golang bash
+		-p 8092:8092 --name ${APP_NAME} golang bash
 
 fmt:
 	docker run -v $(pwd):/go/src/github.com/victorabarros/fmt/ \
