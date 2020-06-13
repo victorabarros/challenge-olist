@@ -2,17 +2,29 @@ package main
 
 import (
 	"encoding/csv"
+	"flag"
 	"fmt"
 	"os"
 )
 
-func main() {
-	// TODO: flag with .csv file name
-	// https://golang.org/doc/effective_go.html#init
-	// https://golang.org/pkg/flag/#pkg-examples
-	db := make(map[int]string)
+var (
+	authors = make(map[int]string)
+	csvName = flag.String("csv", "Authors.csv", "Authors file")
+)
 
-	csvFile, err := os.Open("Authors.csv")
+// func init() {
+// 	// https://golang.org/doc/effective_go.html#init
+// 	// https://github.com/GoogleCloudPlatform/microservices-demo/blob/c78fd12a526c8ba889283ffdbbe4e7d011529935/src/productcatalogservice/server.go#L59
+// }
+
+func main() {
+	flag.Parse() // `go run main.go -h` for help flag
+	loadAuthors()
+	fmt.Println(authors)
+}
+
+func loadAuthors() {
+	csvFile, err := os.Open(*csvName)
 	defer csvFile.Close()
 	if err != nil {
 		panic(err)
@@ -24,9 +36,7 @@ func main() {
 	}
 
 	for idx, line := range csvLines {
-		db[idx] = line[0]
+		authors[idx] = line[0]
 	}
-	delete(db, 0)
-
-	fmt.Println(db)
+	delete(authors, 0) // First row is header
 }
