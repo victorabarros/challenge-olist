@@ -16,10 +16,7 @@ Given a CSV file with many authors (more than a million), you need to build a co
 name
 Luciano Ramalho
 Osvaldo Santana Neto
-David Beazley
-Chetan Giridhar
-Brian K. Jones
-J.K Rowling
+...
 ```
 
 Each author record in the database must have the following fields:
@@ -78,12 +75,17 @@ To retrieve a book (in easy mode) we can filter by 4 fields (or a composition of
 
 ## TODO
 
-- flag arg to load csv authors
-- up db (postgres)
-- code server (try tdd)
-- jmeter load test; if < 1000 tps then up redis cache
-- code climate
-- code tests 80%unit/20%integration
-- up in gke
-- load tests
-- commit postman json libary
+- [X] flag arg to load csv authors
+- [ ] Expose author in endpoint `/authors?offset=20&limit=10&name=Xpto` and `/author/<int:id>`
+- [ ] db (postgres)
+- [ ] code server (try tdd)
+- [ ] jmeter load test; >> 1000 tps
+- [ ] code climate
+- [ ] code tests 80%unit/20%integration
+- [ ] commit postman json libary
+- [ ] heroku
+
+### V2
+
+- [ ] redis cache
+- [ ] gke
