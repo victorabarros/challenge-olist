@@ -55,6 +55,18 @@ func (a authors) loadCsv(name string) {
 	delete(db, 0) // First row is header
 }
 
+func (a authors) subSection(offset, limit int) authors { // TODO improve name
+	resp := make(authors, limit)
+	for idx := 0; idx < limit; idx++ {
+		val, ok := a[idx+offset+1] // `+1` because the firt author id is 1
+		if !ok {
+			break
+		}
+		resp[idx+offset+1] = val
+	}
+	return resp
+}
+
 func newServer() *http.Server {
 	r := mux.NewRouter()
 
@@ -74,12 +86,45 @@ func newServer() *http.Server {
 	return srv
 }
 
-func listAuthors(w http.ResponseWriter, _ *http.Request) {
+func listAuthors(w http.ResponseWriter, req *http.Request) {
+	offset, limit, err := validateListQueryParams(req)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(struct{ Message error }{err})
+		return
+	}
+
 	w.WriteHeader(http.StatusOK)
-	w.Header().Set("Content-Type", "application/json") // TODO Isn't work: >>> requests.get("http://localhost:8092/authors").headers
-	if err := json.NewEncoder(w).Encode(db); err != nil {
+	w.Header().Set("Content-Type", "application/json")
+	if err := json.NewEncoder(w).Encode(db.subSection(offset, limit)); err != nil {
 		fmt.Println(err)
 	}
+}
+
+func validateListQueryParams(req *http.Request) (int, int, error) {
+	// jsonschema validator https://github.com/xeipuuv/gojsonschema
+	params := req.URL.Query()
+	limit, ok := params["limit"]
+	if !ok {
+		limit = []string{"10"} // move to env
+	}
+
+	offset, ok := params["offset"]
+	if !ok {
+		offset = []string{"0"}
+	}
+
+	limitHandled, err := strconv.Atoi(limit[0])
+	if err != nil {
+		return 0, 0, err
+	}
+
+	offsetHandled, err := strconv.Atoi(offset[0])
+	if err != nil {
+		return 0, 0, err
+	}
+
+	return offsetHandled, limitHandled, nil
 }
 
 func getAuthor(w http.ResponseWriter, req *http.Request) {
@@ -93,7 +138,10 @@ func getAuthor(w http.ResponseWriter, req *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusOK)
-	w.Header().Set("Content-Type", "application/json") // TODO Isn't work: {'Date': 'Sun, 14 Jun 2020 00:07:29 GMT', 'Content-Length': '924', 'Content-Type': 'text/plain; charset=utf-8'}
+	w.Header().Set("Content-Type", "application/json")
+	// TODO Isn't work:
+	// >>> requests.get("http://localhost:8092/authors").headers
+	// {'Date': 'Sun, 14 Jun 2020 00:07:29 GMT', 'Content-Length': '924', 'Content-Type': 'text/plain; charset=utf-8'}
 	if err := json.NewEncoder(w).Encode(author); err != nil {
 		fmt.Println(err)
 	}
