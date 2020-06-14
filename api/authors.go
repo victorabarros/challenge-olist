@@ -12,8 +12,10 @@ import (
 
 // SetUpRoutes set api routes
 func SetUpRoutes(r *mux.Router, db *database.Authors) {
+	// TODO move to not especific file
 	r.HandleFunc("/authors", listAuthors(db)).Methods(http.MethodGet)
 	r.HandleFunc("/authors/{id:[0-9]+}", getAuthor(db)).Methods(http.MethodGet)
+	r.HandleFunc("/books", createBook(db)).Methods(http.MethodPost)
 	// TODO add liveness and probeness
 }
 
@@ -21,6 +23,7 @@ func SetUpRoutes(r *mux.Router, db *database.Authors) {
 func listAuthors(db *database.Authors) http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
 		offset, limit, err := validateListQueryParams(req)
+		// TODO;: Add name query param
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			json.NewEncoder(w).Encode(struct{ Message error }{err})
@@ -29,7 +32,8 @@ func listAuthors(db *database.Authors) http.HandlerFunc {
 
 		w.WriteHeader(http.StatusOK)
 		w.Header().Set("Content-Type", "application/json")
-		if err := json.NewEncoder(w).Encode(db.SubSection(offset, limit)); err != nil {
+		if err := json.NewEncoder(w).
+			Encode(db.SubSection(offset, limit)); err != nil {
 			fmt.Println(err)
 		}
 	}
