@@ -11,14 +11,14 @@ import (
 )
 
 // SetUpRoutes set api routes
-func SetUpRoutes(r *mux.Router, db database.Authors) {
+func SetUpRoutes(r *mux.Router, db *database.Authors) {
 	r.HandleFunc("/authors", listAuthors(db)).Methods(http.MethodGet)
 	r.HandleFunc("/authors/{id:[0-9]+}", getAuthor(db)).Methods(http.MethodGet)
 	// TODO add liveness and probeness
 }
 
 // listAuthors return with offset (default = 0) and limit (default = 10) query params
-func listAuthors(db database.Authors) http.HandlerFunc {
+func listAuthors(db *database.Authors) http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
 		offset, limit, err := validateListQueryParams(req)
 		if err != nil {
@@ -38,13 +38,13 @@ func listAuthors(db database.Authors) http.HandlerFunc {
 func validateListQueryParams(req *http.Request) (int, int, error) { // TODO improve name
 	// jsonschema validator https://github.com/xeipuuv/gojsonschema
 	params := req.URL.Query()
-	limit, ok := params["limit"]
-	if !ok {
-		limit = []string{"10"} // TODO move to env
+	limit, prs := params["limit"]
+	if !prs {
+		limit = []string{"100"} // TODO move to env
 	}
 
-	offset, ok := params["offset"]
-	if !ok {
+	offset, prs := params["offset"]
+	if !prs {
 		offset = []string{"0"}
 	}
 
@@ -61,13 +61,13 @@ func validateListQueryParams(req *http.Request) (int, int, error) { // TODO impr
 	return offsetHandled, limitHandled, nil
 }
 
-func getAuthor(db database.Authors) http.HandlerFunc {
+func getAuthor(db *database.Authors) http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
 		params := mux.Vars(req)
 		id, _ := strconv.Atoi(params["id"])
 
-		val, ok := db[id]
-		if !ok {
+		val, prs := (*db)[id]
+		if !prs {
 			w.WriteHeader(http.StatusNotFound)
 			return
 		}

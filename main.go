@@ -31,7 +31,7 @@ func main() {
 
 func newServer(db database.Authors) *http.Server {
 	r := mux.NewRouter()
-	api.SetUpRoutes(r, db)
+	api.SetUpRoutes(r, &db)
 
 	srv := &http.Server{
 		Addr:    ":8092", // TODO move to env
