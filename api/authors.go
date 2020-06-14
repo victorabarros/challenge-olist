@@ -22,11 +22,28 @@ func SetUpRoutes(r *mux.Router, db *database.Authors) {
 // listAuthors return with offset (default = 0) and limit (default = 10) query params
 func listAuthors(db *database.Authors) http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
-		offset, limit, err := validateListQueryParams(req)
-		// TODO;: Add name query param
-		if err != nil {
+		offset, limit, name, errors := validateListQueryParams(req)
+
+		if len(errors) > 0 {
 			w.WriteHeader(http.StatusBadRequest)
-			json.NewEncoder(w).Encode(struct{ Message error }{err})
+			json.NewEncoder(w).Encode(struct{ messages []error }{errors})
+			return
+		}
+
+		if name != "" {
+			resp, prs := db.GetByName(name)
+			if !prs {
+				w.WriteHeader(http.StatusNotFound)
+				// TODO add message response
+				return
+			}
+
+			w.WriteHeader(http.StatusOK)
+			w.Header().Set("Content-Type", "application/json")
+			if err := json.NewEncoder(w).
+				Encode(resp); err != nil {
+				fmt.Println(err)
+			}
 			return
 		}
 
@@ -39,30 +56,35 @@ func listAuthors(db *database.Authors) http.HandlerFunc {
 	}
 }
 
-func validateListQueryParams(req *http.Request) (int, int, error) { // TODO improve name
+func validateListQueryParams(req *http.Request) (offset int, limit int, name string, errors []error) {
+	// TODO improve name
 	// jsonschema validator https://github.com/xeipuuv/gojsonschema
 	params := req.URL.Query()
-	limit, prs := params["limit"]
+
+	limitStr, prs := params["limit"]
 	if !prs {
-		limit = []string{"100"} // TODO move to env
+		limitStr = []string{"100"} // TODO move to env
+	}
+	limit, err := strconv.Atoi(limitStr[0])
+	if err != nil {
+		errors = append(errors, err)
 	}
 
-	offset, prs := params["offset"]
+	offsetStr, prs := params["offset"]
 	if !prs {
-		offset = []string{"0"}
+		offsetStr = []string{"0"}
 	}
-
-	limitHandled, err := strconv.Atoi(limit[0])
+	offset, err = strconv.Atoi(offsetStr[0])
 	if err != nil {
-		return 0, 0, err
+		errors = append(errors, err)
 	}
 
-	offsetHandled, err := strconv.Atoi(offset[0])
-	if err != nil {
-		return 0, 0, err
+	nameQueue, prs := params["name"]
+	if !prs {
+		return
 	}
-
-	return offsetHandled, limitHandled, nil
+	name = nameQueue[0]
+	return
 }
 
 func getAuthor(db *database.Authors) http.HandlerFunc {
@@ -70,9 +92,10 @@ func getAuthor(db *database.Authors) http.HandlerFunc {
 		params := mux.Vars(req)
 		id, _ := strconv.Atoi(params["id"])
 
-		val, prs := (*db)[id]
+		resp, prs := db.GetByID(id)
 		if !prs {
 			w.WriteHeader(http.StatusNotFound)
+			// TODO add message response
 			return
 		}
 
@@ -81,7 +104,7 @@ func getAuthor(db *database.Authors) http.HandlerFunc {
 		// TODO Isn't work:
 		// >>> requests.get("http://localhost:8092/authors").headers
 		// {'Date': 'Sun, 14 Jun 2020 00:07:29 GMT', 'Content-Length': '924', 'Content-Type': 'text/plain; charset=utf-8'}
-		if err := json.NewEncoder(w).Encode(database.Authors{id: val}); err != nil {
+		if err := json.NewEncoder(w).Encode(resp); err != nil {
 			fmt.Println(err)
 		}
 	}
