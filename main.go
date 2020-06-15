@@ -1,13 +1,15 @@
 package main
 
 import (
+	"context"
 	"flag"
+	"fmt"
 	"net/http"
 
+	_ "github.com/go-sql-driver/mysql"
+	"github.com/gorilla/mux"
 	"github.com/victorabarros/work-at-olist/api"
 	"github.com/victorabarros/work-at-olist/internal/database"
-
-	"github.com/gorilla/mux"
 )
 
 var (
@@ -24,6 +26,23 @@ func main() {
 
 	db := database.Authors{}
 	db.LoadCsv(*csvName)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	fmt.Println("ctx")
+	dsn := fmt.Sprintf("%s:%s@tcp(%s)/%s",
+		"root",
+		"my-secret-pw",
+		"127.0.0.1:8093",
+		"olist")
+
+	fmt.Println("db1")
+	myDB, err := database.NewDatabase(ctx, "mysql", dsn)
+	fmt.Println("db2")
+	defer myDB.Connection.Close()
+	if err != nil {
+		panic(err)
+	}
 
 	srv := newServer(db)
 	panic(srv.ListenAndServe())

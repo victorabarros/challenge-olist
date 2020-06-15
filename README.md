@@ -76,14 +76,15 @@ To retrieve a book (in easy mode) we can filter by 4 fields (or a composition of
 ## TODO
 
 - [X] flag arg to load csv authors
-- [ ] Expose author in endpoint `/authors?offset=20&limit=10&name=Xpto` and `/author/<int:id>`
-- [ ] db (postgres)
+- [X] Expose author in endpoint `/authors?offset=20&limit=10&name=Xpto` and `/author/<int:id>`
+- [ ] db (mysql) https://dev.mysql.com/doc/mysql-getting-started/en/
 - [ ] code server (try tdd)
 - [ ] jmeter load test; >> 1000 tps
 - [ ] code climate
 - [ ] code tests 80%unit/20%integration
 - [ ] commit postman json libary
 - [ ] heroku
+- [ ] docker-compose olist/api olist/postgress
 
 ### V2
 
