@@ -10,7 +10,7 @@ import (
 	"github.com/victorabarros/challenge-olist/internal/database"
 )
 
-// listAuthors return with offset (default = 0) and limit (default = 10) query params
+// listAuthors return list
 func listAuthors(db *database.Database) http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
 		fmt.Println("Starting \"listAuthors\" route")
@@ -23,10 +23,11 @@ func listAuthors(db *database.Database) http.HandlerFunc {
 		}
 
 		if name != "" {
-			resp, err := db.GetByName(name)
+			resp, err := db.GetAuthorByName(name)
 			if err != nil {
+				// TODO Acho que o status correto aqui é error
+				// notfound seria se len(resp) == 0
 				w.WriteHeader(http.StatusNotFound)
-				// TODO add message response
 				return
 			}
 
@@ -39,11 +40,12 @@ func listAuthors(db *database.Database) http.HandlerFunc {
 			return
 		}
 
-		authors, err := db.SubSection(limit, offset)
+		authors, err := db.ListAuthors(limit, offset)
 		if err != nil {
 			w.WriteHeader(http.StatusServiceUnavailable)
 			// TODO add message response
 			return
+		}
 
 		w.WriteHeader(http.StatusOK)
 		w.Header().Set("Content-Type", "application/json")
@@ -54,13 +56,15 @@ func listAuthors(db *database.Database) http.HandlerFunc {
 	}
 }
 
-func validateListQueryParams(req *http.Request) (offset int, limit int, name string, errors []error) {
-	// TODO improve name
+// TODO improve name
+func validateListQueryParams(req *http.Request) (
+	offset, limit int, name string, errors []error) {
 	// jsonschema validator https://github.com/xeipuuv/gojsonschema
 	params := req.URL.Query()
 
 	limitStr, prs := params["limit"]
 	if !prs {
+		// Default value
 		limitStr = []string{"100"} // TODO move to env
 	}
 	// TODO if len > 1 append err
@@ -71,6 +75,7 @@ func validateListQueryParams(req *http.Request) (offset int, limit int, name str
 
 	offsetStr, prs := params["offset"]
 	if !prs {
+		// Default value
 		offsetStr = []string{"0"}
 	}
 	// TODO if len > 1 append err
@@ -80,32 +85,30 @@ func validateListQueryParams(req *http.Request) (offset int, limit int, name str
 	}
 
 	nameQueue, prs := params["name"]
-	if !prs {
-		return
+	if prs {
+		// TODO if len > 1 append err? or return more then one?
+		name = nameQueue[0]
 	}
-	// TODO if len > 1 append err? or return more then one?
-	name = nameQueue[0]
 	return
 }
 
-func getAuthor(db *database.Authors) http.HandlerFunc {
+func getAuthorByID(db *database.Database) http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
 		fmt.Println("Starting \"getAuthor\" route")
+
 		params := mux.Vars(req)
 		id, _ := strconv.Atoi(params["id"])
 
-		resp, prs := db.GetByID(id)
-		if !prs {
+		resp, err := db.GetAuthorByID(id)
+		if err != nil {
+			// TODO Acho que o status correto aqui é error
+			// notfound seria se len(resp) == 0
 			w.WriteHeader(http.StatusNotFound)
-			// TODO add message response
 			return
 		}
 
 		w.WriteHeader(http.StatusOK)
 		w.Header().Set("Content-Type", "application/json")
-		// TODO Isn't work:
-		// >>> requests.get("http://localhost:8092/authors").headers
-		// {'Date': 'Sun, 14 Jun 2020 00:07:29 GMT', 'Content-Length': '924', 'Content-Type': 'text/plain; charset=utf-8'}
 		if err := json.NewEncoder(w).Encode(resp); err != nil {
 			fmt.Println(err)
 		}

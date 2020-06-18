@@ -34,12 +34,11 @@ func main() {
 		"127.0.0.1:8093",
 		"olist")
 
+	db, err := database.NewDatabase(ctx, "mysql", dsn)
+	defer db.Connection.Close()
 	if err != nil {
 		panic(err)
 	}
-
-	db, err := database.NewDatabase(ctx, "mysql", dsn)
-	defer db.Connection.Close()
 
 	db.LoadCsv(*csvName)
 
@@ -50,7 +49,7 @@ func main() {
 
 func newServer(db *database.Database) *http.Server {
 	r := mux.NewRouter()
-	api.SetUpRoutes(r, db, myDb)
+	api.SetUpRoutes(r, db)
 
 	srv := &http.Server{
 		Addr:    fmt.Sprintf(":%s", *port),

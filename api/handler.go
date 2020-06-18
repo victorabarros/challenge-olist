@@ -8,9 +8,9 @@ import (
 )
 
 // SetUpRoutes set api routes
-func SetUpRoutes(r *mux.Router, db *database.Authors, myDb *database.Database) {
+func SetUpRoutes(r *mux.Router, db *database.Database) {
 	r.HandleFunc("/authors", listAuthors(db)).Methods(http.MethodGet)
-	r.HandleFunc("/authors/{id:[0-9]+}", getAuthor(db)).Methods(http.MethodGet)
-	r.HandleFunc("/books", createBook(myDb)).Methods(http.MethodPost)
+	r.HandleFunc("/authors/{id:[0-9]+}", getAuthorByID(db)).Methods(http.MethodGet)
+	r.HandleFunc("/books", createBook(db)).Methods(http.MethodPost)
 	// TODO add liveness and probeness
 }

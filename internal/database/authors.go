@@ -4,6 +4,7 @@ import (
 	"encoding/csv"
 	"fmt"
 	"os"
+	"strings"
 )
 
 // Author model
@@ -25,16 +26,19 @@ func (db *Database) LoadCsv(name string) {
 		panic(err)
 	}
 
-	for _, line := range csvLines[1:] {
-		db.CreateAuthor(line[0])
-		// (*a)[idx] = author{Name: line[0]}
+	names := make([]string, len(csvLines)-1)
+	for idx, line := range csvLines[1:] {
+		names[idx] = line[0]
 	}
+
+	db.CreateAuthors(names)
 }
 
-// CreateAuthor create author
-func (db *Database) CreateAuthor(name string) (bool, error) {
+// CreateAuthors create author
+func (db *Database) CreateAuthors(names []string) (bool, error) {
 	query := fmt.Sprintf(
-		`INSERT INTO authors (name) VALUES ('%s');`, name,
+		`INSERT INTO authors (name) VALUES ('%s');`,
+		strings.Join(names, "'), ('"),
 	)
 
 	_ = db.Connection.MustExec(query) // TODO look for a other method that return error
@@ -42,51 +46,54 @@ func (db *Database) CreateAuthor(name string) (bool, error) {
 	return true, nil
 }
 
-// SubSection return a sub section
-func (db *Database) SubSection(limit, offset int) ([]Author, error) { // TODO improve name
+// ListAuthors return a sub section
+func (db *Database) ListAuthors(limit, offset int) ([]Author, error) { // TODO improve name
 	query := fmt.Sprintf(
 		"SELECT id, name FROM authors LIMIT %d OFFSET %d;",
 		limit,
 		offset,
 	)
 
-	authors := make([]Author, limit)
+	authors := []Author{}
 	err := db.Connection.Select(&authors, query)
 	if err != nil {
+		fmt.Println(err)
 		return nil, err
 	}
 
 	return authors, nil
 }
 
-// GetByName return simgle Author
-func (db *Database) GetByName(name string) (*Author, error) {
+// GetAuthorByName return simgle Author
+func (db *Database) GetAuthorByName(name string) (*[]Author, error) {
 	query := fmt.Sprintf(
-		"SELECT id, name FROM authors WHERE name = %s;",
+		"SELECT id, name FROM authors WHERE name = '%s';",
 		name,
 	)
 
-	author := Author{}
-	err := db.Connection.Select(&author, query)
+	rows := []Author{}
+	err := db.Connection.Select(&rows, query)
 	if err != nil {
+		fmt.Println(err)
 		return nil, err
 	}
 
-	return &author, nil
+	return &rows, nil
 }
 
-// GetByID return simgle Author
-func (db *Database) GetByID(id int) (*Author, error) {
+// GetAuthorByID return simgle Author
+func (db *Database) GetAuthorByID(id int) (*[]Author, error) {
 	query := fmt.Sprintf(
 		"SELECT id, name FROM authors WHERE id = %d;",
 		id,
 	)
 
-	author := Author{}
-	err := db.Connection.Select(&author, query)
+	rows := []Author{}
+	err := db.Connection.Select(&rows, query)
 	if err != nil {
+		fmt.Println(err)
 		return nil, err
 	}
 
-	return &author, nil
+	return &rows, nil
 }
