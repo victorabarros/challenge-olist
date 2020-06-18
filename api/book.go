@@ -10,6 +10,7 @@ import (
 
 func createBook(db *database.Database) http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
+		fmt.Println("Starting \"createBook\" route")
 		var book database.Book
 
 		err := json.NewDecoder(req.Body).Decode(&book)
@@ -17,18 +18,18 @@ func createBook(db *database.Database) http.HandlerFunc {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
-		fmt.Println(book)
+
+		for _, id := range book.Authors {
+			// db.GetAuthorByID(id)
+			fmt.Println(id)
+		}
 
 		_, err = db.CreateBook(book)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
-		w.WriteHeader(http.StatusOK)
 		w.Header().Set("Content-Type", "application/json")
-		// if err := json.NewEncoder(w).
-		// 	Encode(db); err != nil {
-		// 	fmt.Println(err)
-		// }
+		w.WriteHeader(http.StatusOK)
 	}
 }

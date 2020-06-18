@@ -11,8 +11,9 @@ import (
 )
 
 // listAuthors return with offset (default = 0) and limit (default = 10) query params
-func listAuthors(db *database.Authors) http.HandlerFunc {
+func listAuthors(db *database.Database) http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
+		fmt.Println("Starting \"listAuthors\" route")
 		offset, limit, name, errors := validateListQueryParams(req)
 
 		if len(errors) > 0 {
@@ -22,8 +23,8 @@ func listAuthors(db *database.Authors) http.HandlerFunc {
 		}
 
 		if name != "" {
-			resp, prs := db.GetByName(name)
-			if !prs {
+			resp, err := db.GetByName(name)
+			if err != nil {
 				w.WriteHeader(http.StatusNotFound)
 				// TODO add message response
 				return
@@ -38,10 +39,16 @@ func listAuthors(db *database.Authors) http.HandlerFunc {
 			return
 		}
 
+		authors, err := db.SubSection(limit, offset)
+		if err != nil {
+			w.WriteHeader(http.StatusServiceUnavailable)
+			// TODO add message response
+			return
+
 		w.WriteHeader(http.StatusOK)
 		w.Header().Set("Content-Type", "application/json")
 		if err := json.NewEncoder(w).
-			Encode(db.SubSection(offset, limit)); err != nil {
+			Encode(authors); err != nil {
 			fmt.Println(err)
 		}
 	}
@@ -56,6 +63,7 @@ func validateListQueryParams(req *http.Request) (offset int, limit int, name str
 	if !prs {
 		limitStr = []string{"100"} // TODO move to env
 	}
+	// TODO if len > 1 append err
 	limit, err := strconv.Atoi(limitStr[0])
 	if err != nil {
 		errors = append(errors, err)
@@ -65,6 +73,7 @@ func validateListQueryParams(req *http.Request) (offset int, limit int, name str
 	if !prs {
 		offsetStr = []string{"0"}
 	}
+	// TODO if len > 1 append err
 	offset, err = strconv.Atoi(offsetStr[0])
 	if err != nil {
 		errors = append(errors, err)
@@ -74,12 +83,14 @@ func validateListQueryParams(req *http.Request) (offset int, limit int, name str
 	if !prs {
 		return
 	}
+	// TODO if len > 1 append err? or return more then one?
 	name = nameQueue[0]
 	return
 }
 
 func getAuthor(db *database.Authors) http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
+		fmt.Println("Starting \"getAuthor\" route")
 		params := mux.Vars(req)
 		id, _ := strconv.Atoi(params["id"])
 

@@ -14,6 +14,7 @@ import (
 
 var (
 	csvName = flag.String("csv", "Authors.csv", "Authors file")
+	port    = flag.String("port", "8092", "Server port") // TODO move to env
 )
 
 // func init() {
@@ -24,36 +25,35 @@ var (
 func main() {
 	flag.Parse() // `go run main.go -h` for help flag
 
-	db := database.Authors{}
-	db.LoadCsv(*csvName)
-
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	fmt.Println("ctx")
+
 	dsn := fmt.Sprintf("%s:%s@tcp(%s)/%s",
-		"root",
-		"my-secret-pw",
+		"olist",
+		"1234",
 		"127.0.0.1:8093",
 		"olist")
 
-	fmt.Println("db1")
-	myDB, err := database.NewDatabase(ctx, "mysql", dsn)
-	fmt.Println("db2")
-	defer myDB.Connection.Close()
 	if err != nil {
 		panic(err)
 	}
 
+	db, err := database.NewDatabase(ctx, "mysql", dsn)
+	defer db.Connection.Close()
+
+	db.LoadCsv(*csvName)
+
 	srv := newServer(db)
+	fmt.Printf("Up apllication at port %s\n" + *port)
 	panic(srv.ListenAndServe())
 }
 
-func newServer(db database.Authors) *http.Server {
+func newServer(db *database.Database) *http.Server {
 	r := mux.NewRouter()
-	api.SetUpRoutes(r, &db)
+	api.SetUpRoutes(r, db, myDb)
 
 	srv := &http.Server{
-		Addr:    ":8092", // TODO move to env
+		Addr:    fmt.Sprintf(":%s", *port),
 		Handler: r,
 	}
 

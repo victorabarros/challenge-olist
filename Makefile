@@ -22,3 +22,8 @@ linter:
 
 log:
 	docker logs ${APP_NAME} > logs.log
+
+run:
+# Como repassar a flag do comando?
+	docker run -v ${PWD}:${APP_DIR} -w ${APP_DIR} \
+		-p 8092:8092 --name ${APP_NAME} golang go run main.go

@@ -2,18 +2,18 @@ package database
 
 import (
 	"encoding/csv"
+	"fmt"
 	"os"
 )
 
-type author struct {
-	Name string `json:"name"`
+// Author model
+type Author struct {
+	ID   string `db:"id"`
+	Name string `db:"name"`
 }
 
-// Authors is a abstraction t database Authors
-type Authors map[int]author
-
 // LoadCsv to authors
-func (a *Authors) LoadCsv(name string) {
+func (db *Database) LoadCsv(name string) {
 	csvFile, err := os.Open(name)
 	defer csvFile.Close()
 	if err != nil {
@@ -25,48 +25,68 @@ func (a *Authors) LoadCsv(name string) {
 		panic(err)
 	}
 
-	for idx, line := range csvLines {
-		(*a)[idx] = author{Name: line[0]}
+	for _, line := range csvLines[1:] {
+		db.CreateAuthor(line[0])
+		// (*a)[idx] = author{Name: line[0]}
 	}
-	delete(*a, 0) // First row is header
+}
+
+// CreateAuthor create author
+func (db *Database) CreateAuthor(name string) (bool, error) {
+	query := fmt.Sprintf(
+		`INSERT INTO authors (name) VALUES ('%s');`, name,
+	)
+
+	_ = db.Connection.MustExec(query) // TODO look for a other method that return error
+
+	return true, nil
 }
 
 // SubSection return a sub section
-func (a *Authors) SubSection(offset, limit int) Authors { // TODO improve name
-	resp := make(Authors, limit)
-	for idx := 0; idx < limit; idx++ {
-		val, ok := (*a)[idx+offset+1] // `+1` because the firt author id is 1
-		if !ok {
-			break
-		}
-		resp[idx+offset+1] = val
+func (db *Database) SubSection(limit, offset int) ([]Author, error) { // TODO improve name
+	query := fmt.Sprintf(
+		"SELECT id, name FROM authors LIMIT %d OFFSET %d;",
+		limit,
+		offset,
+	)
+
+	authors := make([]Author, limit)
+	err := db.Connection.Select(&authors, query)
+	if err != nil {
+		return nil, err
 	}
-	return resp
+
+	return authors, nil
 }
 
 // GetByName return simgle Author
-func (a *Authors) GetByName(name string) (Authors, bool) {
-	for idx, author := range *a {
-		// TODO find a way to return match similars, not only equal
-		if author.Name == name {
-			return Authors{idx: author}, true
-		}
+func (db *Database) GetByName(name string) (*Author, error) {
+	query := fmt.Sprintf(
+		"SELECT id, name FROM authors WHERE name = %s;",
+		name,
+	)
+
+	author := Author{}
+	err := db.Connection.Select(&author, query)
+	if err != nil {
+		return nil, err
 	}
 
-	return nil, false
+	return &author, nil
 }
 
 // GetByID return simgle Author
-func (a *Authors) GetByID(id int) (Authors, bool) {
-	author, prs := (*a)[id]
-	if !prs {
-		return nil, false
+func (db *Database) GetByID(id int) (*Author, error) {
+	query := fmt.Sprintf(
+		"SELECT id, name FROM authors WHERE id = %d;",
+		id,
+	)
+
+	author := Author{}
+	err := db.Connection.Select(&author, query)
+	if err != nil {
+		return nil, err
 	}
 
-	return Authors{id: author}, true
+	return &author, nil
 }
-
-// // NewAuthorsDb return new Authors{}
-// func NewAuthorsDb() Authors {
-// 	return Authors{}
-// }
