@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/victorabarros/work-at-olist/internal/database"
+	"github.com/victorabarros/challenge-olist/internal/database"
 )
 
 func createBook(db *database.Database) http.HandlerFunc {

@@ -7,7 +7,7 @@ import (
 	"strconv"
 
 	"github.com/gorilla/mux"
-	"github.com/victorabarros/work-at-olist/internal/database"
+	"github.com/victorabarros/challenge-olist/internal/database"
 )
 
 // listAuthors return with offset (default = 0) and limit (default = 10) query params

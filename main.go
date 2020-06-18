@@ -8,8 +8,8 @@ import (
 
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/gorilla/mux"
-	"github.com/victorabarros/work-at-olist/api"
-	"github.com/victorabarros/work-at-olist/internal/database"
+	"github.com/victorabarros/challenge-olist/api"
+	"github.com/victorabarros/challenge-olist/internal/database"
 )
 
 var (

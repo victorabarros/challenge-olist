@@ -4,7 +4,7 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
-	"github.com/victorabarros/work-at-olist/internal/database"
+	"github.com/victorabarros/challenge-olist/internal/database"
 )
 
 // SetUpRoutes set api routes

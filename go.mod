@@ -1,4 +1,4 @@
-module github.com/victorabarros/work-at-olist
+module github.com/victorabarros/challenge-olist
 
 go 1.14
 
