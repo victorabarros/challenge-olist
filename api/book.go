@@ -21,15 +21,27 @@ func createBook(db *database.Database) http.HandlerFunc {
 
 		for _, id := range book.Authors {
 			// db.GetAuthorByID(id)
+			// TODO chegar se authores existe no banco
 			fmt.Println(id)
 		}
 
-		_, err = db.CreateBook(book)
+		id, err := db.InsertBook(book)
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
+			http.Error(w, err.Error(), http.StatusServiceUnavailable)
+			// TODO mensagem de resposta
 			return
 		}
+		book.ID = int(id)
+
+		err = db.InsertBookAuthors(book.ID, book.Authors)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusServiceUnavailable)
+			// TODO mensagem de resposta
+			return
+		}
+
 		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
+		w.WriteHeader(http.StatusCreated)
+		// TODO mensagem de resposta
 	}
 }
