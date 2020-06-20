@@ -41,19 +41,46 @@ func (db *Database) CreateAuthors(names []string) (bool, error) {
 		strings.Join(names, "'), ('"),
 	)
 
-	_ = db.Connection.MustExec(query) // TODO look for a other method that return error
+	// TODO look for a other method that return error
+	_ = db.Connection.MustExec(query)
 
 	return true, nil
 }
 
 // ListAuthors return a sub section
-func (db *Database) ListAuthors(limit, offset int) ([]Author, error) { // TODO improve name
+func (db *Database) ListAuthors(limit, offset int) (*[]Author, error) { // TODO improve name
 	query := fmt.Sprintf(
 		"SELECT id, name FROM authors LIMIT %d OFFSET %d;",
 		limit,
 		offset,
 	)
 
+	return db.selectAuthors(query)
+}
+
+// GetAuthorByName return simgle Author
+func (db *Database) GetAuthorByName(name string) (*[]Author, error) {
+	// TODO Is necessary LIMIT 1?
+	query := fmt.Sprintf(
+		"SELECT id, name FROM authors WHERE name = '%s';",
+		name,
+	)
+	// TODO: retornar apenas *Author
+	return db.selectAuthors(query)
+}
+
+// GetAuthorByID return simgle Author
+func (db *Database) GetAuthorByID(id int) (*[]Author, error) {
+	// TODO Is necessary LIMIT 1?
+	query := fmt.Sprintf(
+		"SELECT id, name FROM authors WHERE id = %d;",
+		id,
+	)
+	// TODO: retornar apenas *Author
+	return db.selectAuthors(query)
+}
+
+func (db *Database) selectAuthors(query string) (*[]Author, error) {
 	authors := []Author{}
 	err := db.Connection.Select(&authors, query)
 	if err != nil {
@@ -61,39 +88,5 @@ func (db *Database) ListAuthors(limit, offset int) ([]Author, error) { // TODO i
 		return nil, err
 	}
 
-	return authors, nil
-}
-
-// GetAuthorByName return simgle Author
-func (db *Database) GetAuthorByName(name string) (*[]Author, error) {
-	query := fmt.Sprintf(
-		"SELECT id, name FROM authors WHERE name = '%s';",
-		name,
-	)
-
-	rows := []Author{}
-	err := db.Connection.Select(&rows, query)
-	if err != nil {
-		fmt.Println(err)
-		return nil, err
-	}
-
-	return &rows, nil
-}
-
-// GetAuthorByID return simgle Author
-func (db *Database) GetAuthorByID(id int) (*[]Author, error) {
-	query := fmt.Sprintf(
-		"SELECT id, name FROM authors WHERE id = %d;",
-		id,
-	)
-
-	rows := []Author{}
-	err := db.Connection.Select(&rows, query)
-	if err != nil {
-		fmt.Println(err)
-		return nil, err
-	}
-
-	return &rows, nil
+	return &authors, err
 }

@@ -23,18 +23,17 @@ func listAuthors(db *database.Database) http.HandlerFunc {
 		}
 
 		if name != "" {
-			resp, err := db.GetAuthorByName(name)
+			author, err := db.GetAuthorByName(name)
 			if err != nil {
-				// TODO Acho que o status correto aqui é error
-				// notfound seria se len(resp) == 0
-				w.WriteHeader(http.StatusNotFound)
+				w.WriteHeader(http.StatusServiceUnavailable)
 				return
 			}
+			// TODO se len(author) == 0 http.StatusNotFound
 
 			w.WriteHeader(http.StatusOK)
 			w.Header().Set("Content-Type", "application/json")
 			if err := json.NewEncoder(w).
-				Encode(resp); err != nil {
+				Encode(author); err != nil {
 				fmt.Println(err)
 			}
 			return
@@ -90,6 +89,7 @@ func validateListQueryParams(req *http.Request) (
 		name = nameQueue[0]
 	}
 	return
+	// TODO: validar se são offset e limit são inteiros positivos
 }
 
 func getAuthorByID(db *database.Database) http.HandlerFunc {
@@ -99,17 +99,16 @@ func getAuthorByID(db *database.Database) http.HandlerFunc {
 		params := mux.Vars(req)
 		id, _ := strconv.Atoi(params["id"])
 
-		resp, err := db.GetAuthorByID(id)
+		author, err := db.GetAuthorByID(id)
 		if err != nil {
-			// TODO Acho que o status correto aqui é error
-			// notfound seria se len(resp) == 0
-			w.WriteHeader(http.StatusNotFound)
+			w.WriteHeader(http.StatusServiceUnavailable)
 			return
 		}
+		// TODO se len(author) == 0 http.StatusNotFound
 
 		w.WriteHeader(http.StatusOK)
 		w.Header().Set("Content-Type", "application/json")
-		if err := json.NewEncoder(w).Encode(resp); err != nil {
+		if err := json.NewEncoder(w).Encode(author); err != nil {
 			fmt.Println(err)
 		}
 	}
