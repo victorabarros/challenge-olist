@@ -43,7 +43,7 @@ func main() {
 	db.LoadCsv(*csvName)
 
 	srv := newServer(db)
-	fmt.Printf("Up apllication at port %s\n" + *port)
+	fmt.Printf("Up apllication at port %s\n", *port)
 	panic(srv.ListenAndServe())
 }
 
