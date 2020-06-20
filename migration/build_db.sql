@@ -4,10 +4,10 @@ CREATE DATABASE olist;
 USE olist;
 
 CREATE TABLE `books` (
-  `id`             INT         NOT NULL AUTO_INCREMENT,
-  `name`           VARCHAR(50) NOT NULL               ,
-  `edition`        INT                                ,
-  `published_year` INT                                ,
+  `id`               INT         NOT NULL AUTO_INCREMENT,
+  `name`             VARCHAR(50) NOT NULL               ,
+  `edition`          INT                                ,
+  `publication_year` INT                                ,
   PRIMARY KEY (`id`)
 );
 
