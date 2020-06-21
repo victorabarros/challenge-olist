@@ -25,6 +25,7 @@ func createBook(db *database.Database) http.HandlerFunc {
 			fmt.Println(id)
 		}
 
+		// TODO Validar se o livro já não existe
 		id, err := db.InsertBook(book)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusServiceUnavailable)
@@ -43,5 +44,33 @@ func createBook(db *database.Database) http.HandlerFunc {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusCreated)
 		// TODO mensagem de resposta
+	}
+}
+
+// listBooks return list
+func listBooks(db *database.Database) http.HandlerFunc {
+	return func(w http.ResponseWriter, req *http.Request) {
+		fmt.Println("Starting \"listBooks\" route")
+
+		ans, err := db.ListBooks()
+		if err != nil {
+			w.WriteHeader(http.StatusServiceUnavailable)
+			// TODO add message response
+			return
+		}
+		books := *ans
+
+		for idx, book := range books {
+			authors, _ := db.GetAuthorsIDByBookID(book.ID)
+			books[idx].Authors = *authors
+		}
+
+		w.WriteHeader(http.StatusOK)
+		w.Header().Set("Content-Type", "application/json")
+
+		if err := json.NewEncoder(w).
+			Encode(books); err != nil {
+			fmt.Println(err)
+		}
 	}
 }

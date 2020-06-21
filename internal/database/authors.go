@@ -9,7 +9,7 @@ import (
 
 // Author model
 type Author struct {
-	ID   string `db:"id"`
+	ID   int    `db:"id"`
 	Name string `db:"name"`
 }
 
@@ -78,6 +78,35 @@ func (db *Database) GetAuthorByID(id int) (*[]Author, error) {
 	)
 	// TODO: retornar apenas *Author
 	return db.selectAuthors(query)
+}
+
+// ListAuthorsByBookID return Authors by book ID
+func (db *Database) ListAuthorsByBookID(id int) (*[]Author, error) {
+	query := fmt.Sprintf(
+		`SELECT ba.author_id as id, a.name as name
+		FROM books_authors ba LEFT JOIN authors a
+		ON ba.author_id = a.id
+		WHERE ba.book_id = %d;`,
+		id,
+	)
+	// TODO: retornar apenas *Author
+	return db.selectAuthors(query)
+}
+
+// GetAuthorsIDByBookID return a sub section
+func (db *Database) GetAuthorsIDByBookID(bookID int) (*[]int, error) {
+	authors, err := db.ListAuthorsByBookID(bookID)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+
+	authorsID := make([]int, len(*authors))
+	for idx, author := range *authors {
+		authorsID[idx] = author.ID
+	}
+
+	return &authorsID, nil
 }
 
 func (db *Database) selectAuthors(query string) (*[]Author, error) {

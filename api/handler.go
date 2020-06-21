@@ -12,5 +12,6 @@ func SetUpRoutes(r *mux.Router, db *database.Database) {
 	r.HandleFunc("/authors", listAuthors(db)).Methods(http.MethodGet)
 	r.HandleFunc("/authors/{id:[0-9]+}", getAuthorByID(db)).Methods(http.MethodGet)
 	r.HandleFunc("/books", createBook(db)).Methods(http.MethodPost)
+	r.HandleFunc("/books", listBooks(db)).Methods(http.MethodGet)
 	// TODO add liveness and probeness
 }
