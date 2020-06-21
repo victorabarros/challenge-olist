@@ -26,6 +26,10 @@ func (db *Database) InsertBook(book Book) (int64, error) {
 
 // InsertBookAuthors inserts new book to db
 func (db *Database) InsertBookAuthors(bookID int, authorIDs []int) error {
+	if len(authorIDs) == 0 {
+		return nil
+	}
+
 	values := fmt.Sprintf("(%d, %d)", bookID, authorIDs[0])
 
 	for _, authorID := range authorIDs[1:] {
@@ -35,6 +39,18 @@ func (db *Database) InsertBookAuthors(bookID int, authorIDs []int) error {
 	query := fmt.Sprintf(
 		`INSERT INTO books_authors (book_id, author_id) VALUES %s;`,
 		values,
+	)
+
+	_ = db.Connection.MustExec(query)
+
+	return nil
+}
+
+// DeleteBookAuthors inserts new book to db
+func (db *Database) DeleteBookAuthors(bookID int) error {
+	query := fmt.Sprintf(
+		`DELETE FROM books_authors WHERE book_id = %d;`,
+		bookID,
 	)
 
 	_ = db.Connection.MustExec(query)
@@ -61,4 +77,22 @@ func (db *Database) ListBooks() (*[]Book, error) {
 	}
 
 	return &books, err
+}
+
+// UpdateBook return a sub section
+func (db *Database) UpdateBook(book Book, fields []string) error {
+	// TODO valid fields
+	sets := fmt.Sprintf(
+		`name = "%s", edition = %d, publication_year = %d`,
+		book.Name, book.Edition, book.PublicationYear,
+	)
+
+	query := fmt.Sprintf(
+		`UPDATE books SET %s WHERE id = %d;`,
+		sets, book.ID,
+	)
+
+	_ = db.Connection.MustExec(query)
+
+	return nil
 }

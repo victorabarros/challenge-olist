@@ -6,8 +6,7 @@
 
 ### 3. CRUD of books
 
-- Read
-- Update
+- Update -> put and patch
 - Delete
 
 To retrieve a book (in easy mode) we can filter by 4 fields (or a composition of these four):
