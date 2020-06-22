@@ -22,3 +22,15 @@ func NewDatabase(ctx context.Context, driver string, dsn string) (*Database, err
 
 	return &Database{Connection: conn}, nil
 }
+
+// StatusCheck returns nil if it can successfully talk to the database.
+func (db *Database) StatusCheck() error {
+	const q = `SELECT true;`
+
+	if err := db.Connection.Select(&[]bool{}, q); err != nil {
+		fmt.Println(err)
+		return err
+	}
+
+	return nil
+}

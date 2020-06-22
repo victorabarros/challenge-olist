@@ -111,11 +111,10 @@ func (db *Database) GetAuthorsIDByBookID(bookID int) (*[]int, error) {
 
 func (db *Database) selectAuthors(query string) (*[]Author, error) {
 	authors := []Author{}
-	err := db.Connection.Select(&authors, query)
-	if err != nil {
+	if err := db.Connection.Select(&authors, query); err != nil {
 		fmt.Println(err)
 		return nil, err
 	}
 
-	return &authors, err
+	return &authors, nil
 }

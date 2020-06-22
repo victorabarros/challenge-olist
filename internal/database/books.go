@@ -70,17 +70,16 @@ func (db *Database) ListBooks() (*[]Book, error) {
 		;`
 
 	books := []Book{}
-	err := db.Connection.Select(&books, query)
-	if err != nil {
+	if err := db.Connection.Select(&books, query); err != nil {
 		fmt.Println(err)
 		return nil, err
 	}
 
-	return &books, err
+	return &books, nil
 }
 
 // UpdateBook return a sub section
-func (db *Database) UpdateBook(book Book, fields []string) error {
+func (db *Database) UpdateBook(book Book) error {
 	// TODO valid fields
 	sets := fmt.Sprintf(
 		`name = "%s", edition = %d, publication_year = %d`,
@@ -89,6 +88,39 @@ func (db *Database) UpdateBook(book Book, fields []string) error {
 
 	query := fmt.Sprintf(
 		`UPDATE books SET %s WHERE id = %d;`,
+		sets, book.ID,
+	)
+	fmt.Println(query)
+
+	_ = db.Connection.MustExec(query)
+
+	return nil
+}
+
+// PartialUpdateBook return a sub section
+func (db *Database) PartialUpdateBook(book Book) error {
+	var sets string
+
+	if book.Name != "" {
+		sets = fmt.Sprintf(`%s name = \'%s\',`, sets, book.Name)
+	}
+	if book.Edition != 0 {
+		sets = fmt.Sprintf(`%s edition = %d,`, sets, book.Edition)
+	}
+	if book.PublicationYear != 0 {
+		sets = fmt.Sprintf(`%s publication_year = %d,`,
+			sets, book.PublicationYear)
+	}
+
+	if sets == "" {
+		// TODO return error or nil?
+		return fmt.Errorf("no field to update")
+	}
+
+	sets = fmt.Sprintf("%s\b", sets)
+
+	query := fmt.Sprintf(
+		`UPDATE books SET%s WHERE id = %d;`,
 		sets, book.ID,
 	)
 

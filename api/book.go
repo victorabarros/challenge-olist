@@ -82,6 +82,11 @@ func putBook(db *database.Database) http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
 		fmt.Println("Starting \"putBook\" route")
 
+		params := mux.Vars(req)
+		bookID, _ := strconv.Atoi(params["id"])
+		// TODO handler error
+		// TODO check if bookID
+
 		book := database.Book{}
 		err := json.NewDecoder(req.Body).Decode(&book)
 		if err != nil {
@@ -89,14 +94,10 @@ func putBook(db *database.Database) http.HandlerFunc {
 			return
 		}
 		// TODO validar se edition, name, publication_year e len(authors) != 0
-
-		params := mux.Vars(req)
-		bookID, _ := strconv.Atoi(params["id"])
-		// TODO handler error
-		// TODO check if bookID , if not: status response 409 Conflict
+		// => badrequest
 		book.ID = bookID
 
-		_ = db.UpdateBook(book, []string{"name", "edition", "publication_year"})
+		_ = db.UpdateBook(book)
 		// if err != nil {
 		// 	fmt.Println(err)
 		// 	http.Error(w, err.Error(), http.StatusServiceUnavailable)
@@ -122,8 +123,7 @@ func putBook(db *database.Database) http.HandlerFunc {
 		w.WriteHeader(http.StatusOK)
 		w.Header().Set("Content-Type", "application/json")
 
-		if err := json.NewEncoder(w).
-			Encode(bookID); err != nil {
+		if err := json.NewEncoder(w).Encode(bookID); err != nil {
 			fmt.Println(err)
 		}
 	}
@@ -134,7 +134,52 @@ func patchBook(db *database.Database) http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
 		fmt.Println("Starting \"patchBook\" route")
 
-		w.WriteHeader(http.StatusOK)
-		w.Header().Set("Content-Type", "application/json")
+		params := mux.Vars(req)
+		bookID, _ := strconv.Atoi(params["id"])
+		// TODO handler error
+		// TODO check if bookID exists, if not: status not found
+
+		book := database.Book{}
+		err := json.NewDecoder(req.Body).Decode(&book)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+
+		book.ID = bookID
+
+		_ = db.PartialUpdateBook(book)
+		// if err != nil {
+		// 	fmt.Println(err)
+		// 	http.Error(w, err.Error(), http.StatusServiceUnavailable)
+		// 	// TODO mensagem de resposta
+		// 	return
+		// }
+
+		if len(book.Authors) != 0 {
+			// fields = append(fields, "authors")
+		}
+		// _ = db.DeleteBookAuthors(book.ID)
+		// // if err != nil {
+		// // 	fmt.Println(err)
+		// // 	http.Error(w, err.Error(), http.StatusServiceUnavailable)
+		// // 	// TODO mensagem de resposta
+		// // 	return
+		// // }
+
+		// _ = db.InsertBookAuthors(book.ID, book.Authors)
+		// // if err != nil {
+		// // 	http.Error(w, err.Error(), http.StatusServiceUnavailable)
+		// // 	// TODO mensagem de resposta
+		// // 	return
+		// // }
+
+		// w.WriteHeader(http.StatusOK)
+		// w.Header().Set("Content-Type", "application/json")
+
+		// if err := json.NewEncoder(w).
+		// 	Encode(bookID); err != nil {
+		// 	fmt.Println(err)
+		// }
 	}
 }

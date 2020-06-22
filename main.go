@@ -51,10 +51,10 @@ func newServer(db *database.Database) *http.Server {
 	r := mux.NewRouter()
 	api.SetUpRoutes(r, db)
 
-	srv := &http.Server{
+	srv := http.Server{
 		Addr:    fmt.Sprintf(":%s", *port),
 		Handler: r,
 	}
 
-	return srv
+	return &srv
 }
