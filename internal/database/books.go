@@ -102,7 +102,7 @@ func (db *Database) PartialUpdateBook(book Book) error {
 	var sets string
 
 	if book.Name != "" {
-		sets = fmt.Sprintf(`%s name = \'%s\',`, sets, book.Name)
+		sets = fmt.Sprintf(`%s name = '%s',`, sets, book.Name)
 	}
 	if book.Edition != 0 {
 		sets = fmt.Sprintf(`%s edition = %d,`, sets, book.Edition)
@@ -114,10 +114,12 @@ func (db *Database) PartialUpdateBook(book Book) error {
 
 	if sets == "" {
 		// TODO return error or nil?
-		return fmt.Errorf("no field to update")
+		fmt.Println("Any field to update")
+		return nil
 	}
 
-	sets = fmt.Sprintf("%s\b", sets)
+	// remove last comma/character
+	sets = sets[:len(sets)-1]
 
 	query := fmt.Sprintf(
 		`UPDATE books SET%s WHERE id = %d;`,

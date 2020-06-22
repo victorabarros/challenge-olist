@@ -123,6 +123,7 @@ func putBook(db *database.Database) http.HandlerFunc {
 		w.WriteHeader(http.StatusOK)
 		w.Header().Set("Content-Type", "application/json")
 
+		// TODO improve message response
 		if err := json.NewEncoder(w).Encode(bookID); err != nil {
 			fmt.Println(err)
 		}
@@ -156,30 +157,31 @@ func patchBook(db *database.Database) http.HandlerFunc {
 		// 	return
 		// }
 
-		if len(book.Authors) != 0 {
-			// fields = append(fields, "authors")
+		if book.Authors != nil && len(book.Authors) != 0 {
+			// TODO improve this update.
+			// Is possible make with only one connection?
+			_ = db.DeleteBookAuthors(book.ID)
+			if err != nil {
+				fmt.Println(err)
+				http.Error(w, err.Error(), http.StatusServiceUnavailable)
+				// TODO mensagem de resposta
+				return
+			}
+
+			_ = db.InsertBookAuthors(book.ID, book.Authors)
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusServiceUnavailable)
+				// TODO mensagem de resposta
+				return
+			}
 		}
-		// _ = db.DeleteBookAuthors(book.ID)
-		// // if err != nil {
-		// // 	fmt.Println(err)
-		// // 	http.Error(w, err.Error(), http.StatusServiceUnavailable)
-		// // 	// TODO mensagem de resposta
-		// // 	return
-		// // }
 
-		// _ = db.InsertBookAuthors(book.ID, book.Authors)
-		// // if err != nil {
-		// // 	http.Error(w, err.Error(), http.StatusServiceUnavailable)
-		// // 	// TODO mensagem de resposta
-		// // 	return
-		// // }
+		w.WriteHeader(http.StatusOK)
+		w.Header().Set("Content-Type", "application/json")
 
-		// w.WriteHeader(http.StatusOK)
-		// w.Header().Set("Content-Type", "application/json")
-
-		// if err := json.NewEncoder(w).
-		// 	Encode(bookID); err != nil {
-		// 	fmt.Println(err)
-		// }
+		// TODO improve message response
+		if err := json.NewEncoder(w).Encode(bookID); err != nil {
+			fmt.Println(err)
+		}
 	}
 }

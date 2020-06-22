@@ -6,8 +6,8 @@ USE olist;
 CREATE TABLE `books` (
   `id`               INT         NOT NULL AUTO_INCREMENT,
   `name`             VARCHAR(50) NOT NULL               ,
-  `edition`          INT                                ,
-  `publication_year` INT                                ,
+  `edition`          INT         NOT NULL               ,
+  `publication_year` INT         NOT NULL               ,
   PRIMARY KEY (`id`)
 );
 
