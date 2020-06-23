@@ -47,8 +47,27 @@ func (db *Database) CreateAuthors(names []string) (bool, error) {
 	return true, nil
 }
 
+// CreateAuthor create author
+func (db *Database) CreateAuthor(name string) (bool, error) {
+	query := `INSERT INTO authors (name) VALUES (:name);`
+
+	// TODO look for a other method that return error
+	_, err := db.Connection.NamedExec(query,
+		map[string]interface{}{
+			"name": name,
+		},
+	)
+	if err != nil {
+		fmt.Println(err)
+		return false, err
+	}
+	// TODO Se já tiver no banco, ignorar erro.
+
+	return true, nil
+}
+
 // ListAuthors return a sub section
-func (db *Database) ListAuthors(limit, offset int) (*[]Author, error) { // TODO improve name
+func (db *Database) ListAuthors(limit, offset int) ([]Author, error) { // TODO improve name
 	query := fmt.Sprintf(
 		"SELECT id, name FROM authors LIMIT %d OFFSET %d;",
 		limit,
@@ -59,7 +78,7 @@ func (db *Database) ListAuthors(limit, offset int) (*[]Author, error) { // TODO 
 }
 
 // GetAuthorByName return simgle Author
-func (db *Database) GetAuthorByName(name string) (*[]Author, error) {
+func (db *Database) GetAuthorByName(name string) ([]Author, error) {
 	// TODO Is necessary LIMIT 1?
 	query := fmt.Sprintf(
 		"SELECT id, name FROM authors WHERE name = '%s';",
@@ -70,7 +89,7 @@ func (db *Database) GetAuthorByName(name string) (*[]Author, error) {
 }
 
 // GetAuthorByID return simgle Author
-func (db *Database) GetAuthorByID(id int) (*[]Author, error) {
+func (db *Database) GetAuthorByID(id int) ([]Author, error) {
 	// TODO Is necessary LIMIT 1?
 	query := fmt.Sprintf(
 		"SELECT id, name FROM authors WHERE id = %d;",
@@ -80,41 +99,12 @@ func (db *Database) GetAuthorByID(id int) (*[]Author, error) {
 	return db.selectAuthors(query)
 }
 
-// ListAuthorsByBookID return Authors by book ID
-func (db *Database) ListAuthorsByBookID(id int) (*[]Author, error) {
-	query := fmt.Sprintf(
-		`SELECT ba.author_id as id, a.name as name
-		FROM books_authors ba LEFT JOIN authors a
-		ON ba.author_id = a.id
-		WHERE ba.book_id = %d;`,
-		id,
-	)
-	// TODO: retornar apenas *Author
-	return db.selectAuthors(query)
-}
-
-// GetAuthorsIDByBookID return a sub section
-func (db *Database) GetAuthorsIDByBookID(bookID int) (*[]int, error) {
-	authors, err := db.ListAuthorsByBookID(bookID)
-	if err != nil {
-		fmt.Println(err)
-		return nil, err
-	}
-
-	authorsID := make([]int, len(*authors))
-	for idx, author := range *authors {
-		authorsID[idx] = author.ID
-	}
-
-	return &authorsID, nil
-}
-
-func (db *Database) selectAuthors(query string) (*[]Author, error) {
+func (db *Database) selectAuthors(query string) ([]Author, error) {
 	authors := []Author{}
 	if err := db.Connection.Select(&authors, query); err != nil {
 		fmt.Println(err)
 		return nil, err
 	}
 
-	return &authors, nil
+	return authors, nil
 }

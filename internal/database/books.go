@@ -27,40 +27,6 @@ func (db *Database) InsertBook(book Book) (int64, error) {
 	return resp.LastInsertId()
 }
 
-// InsertBookAuthors inserts new book to db
-func (db *Database) InsertBookAuthors(bookID int, authorIDs []int) error {
-	if len(authorIDs) == 0 {
-		return nil
-	}
-
-	values := fmt.Sprintf("(%d, %d)", bookID, authorIDs[0])
-
-	for _, authorID := range authorIDs[1:] {
-		values = fmt.Sprintf("%s , (%d, %d)", values, bookID, authorID)
-	}
-
-	query := fmt.Sprintf(
-		`INSERT INTO books_authors (book_id, author_id) VALUES %s;`,
-		values,
-	)
-
-	_ = db.Connection.MustExec(query)
-
-	return nil
-}
-
-// DeleteBookAuthors inserts new book to db
-func (db *Database) DeleteBookAuthors(bookID int) error {
-	query := fmt.Sprintf(
-		`DELETE FROM books_authors WHERE book_id = %d;`,
-		bookID,
-	)
-
-	_ = db.Connection.MustExec(query)
-
-	return nil
-}
-
 // ListBooks return a sub section
 func (db *Database) ListBooks(filters map[string][]string) ([]Book, error) {
 	conditions := `WHERE true AND`
@@ -116,7 +82,6 @@ func (db *Database) ListBooks(filters map[string][]string) ([]Book, error) {
 
 	books := []Book{}
 	if err := db.Connection.Select(&books, query); err != nil {
-		fmt.Println(err)
 		return nil, err
 	}
 
@@ -133,7 +98,6 @@ func (db *Database) GetBookByID(id int) ([]Book, error) {
 
 	books := []Book{}
 	if err := db.Connection.Select(&books, query); err != nil {
-		fmt.Println(err)
 		return nil, err
 	}
 
@@ -189,6 +153,7 @@ func (db *Database) PartialUpdateBook(book Book) error {
 		sets, book.ID,
 	)
 
+	// TODO procurar metho melhor que `MustExec` que retorne erro
 	_ = db.Connection.MustExec(query)
 
 	return nil

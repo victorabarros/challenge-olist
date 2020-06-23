@@ -9,18 +9,18 @@ import (
 
 // Database struct with connection
 type Database struct {
-	Connection *sqlx.DB
+	Connection sqlx.DB
 }
 
 // NewDatabase return database connection.
-func NewDatabase(ctx context.Context, driver string, dsn string) (*Database, error) {
+func NewDatabase(ctx context.Context, driver string, dsn string) (Database, error) {
 	conn, err := sqlx.ConnectContext(ctx, driver, dsn)
 	if err != nil {
 		fmt.Println(err)
-		return nil, err
+		return Database{}, err
 	}
 
-	return &Database{Connection: conn}, nil
+	return Database{Connection: *conn}, nil
 }
 
 // StatusCheck returns nil if it can successfully talk to the database.
