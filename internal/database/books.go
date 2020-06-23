@@ -93,7 +93,7 @@ func (db *Database) ListBooks(filters map[string][]string) ([]Book, error) {
 func (db *Database) GetBookByID(id int) (*Book, error) {
 	// TODO Is necessary LIMIT 1?
 	query := fmt.Sprintf(
-		"SELECT id, name FROM books WHERE id = %d;",
+		"SELECT id, name, edition, publication_year FROM books WHERE id = %d;",
 		id,
 	)
 
