@@ -21,10 +21,9 @@ func (db *Database) CreateAuthor(name string) (bool, error) {
 		},
 	)
 	if err != nil {
-		fmt.Println(err)
+		fmt.Println(err) // TODO log
 		return false, err
 	}
-	// TODO Se já tiver no banco, ignorar erro.
 
 	return true, nil
 }
@@ -42,7 +41,6 @@ func (db *Database) ListAuthors(limit, offset int) ([]Author, error) { // TODO i
 
 // GetAuthorByName return simgle Author
 func (db *Database) GetAuthorByName(name string) ([]Author, error) {
-	// TODO Is necessary LIMIT 1?
 	query := fmt.Sprintf(
 		"SELECT id, name FROM authors WHERE name = '%s';",
 		name,
@@ -52,14 +50,17 @@ func (db *Database) GetAuthorByName(name string) ([]Author, error) {
 }
 
 // GetAuthorByID return simgle Author
-func (db *Database) GetAuthorByID(id int) ([]Author, error) {
-	// TODO Is necessary LIMIT 1?
+func (db *Database) GetAuthorByID(id int) (*Author, error) {
 	query := fmt.Sprintf(
 		"SELECT id, name FROM authors WHERE id = %d;",
 		id,
 	)
-	// TODO: retornar apenas *Author
-	return db.selectAuthors(query)
+	authors, err := db.selectAuthors(query)
+	if len(authors) == 0 {
+		return nil, err
+	}
+	author := authors[0]
+	return &author, err
 }
 
 func (db *Database) selectAuthors(query string) ([]Author, error) {

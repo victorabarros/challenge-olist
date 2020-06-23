@@ -8,7 +8,6 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/victorabarros/challenge-olist/business"
-	"github.com/victorabarros/challenge-olist/internal/database"
 )
 
 // listAuthors return list
@@ -31,6 +30,7 @@ func listAuthors(a *business.Author) http.HandlerFunc {
 		switch {
 		case err != nil:
 			w.WriteHeader(http.StatusServiceUnavailable)
+			w.Header().Set("Content-Type", "application/json")
 			// TODO log err
 			// TODO build error response message
 		case len(*authors) == 0:
@@ -96,24 +96,29 @@ func validateListQueryParams(req *http.Request) (
 	return
 }
 
-func getAuthorByID(db *database.Database) http.HandlerFunc {
+func getAuthorByID(a *business.Author) http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
 		fmt.Println("Starting \"getAuthor\" route")
 
 		params := mux.Vars(req)
 		id, _ := strconv.Atoi(params["id"])
 
-		author, err := db.GetAuthorByID(id)
-		if err != nil {
-			w.WriteHeader(http.StatusServiceUnavailable)
-			return
-		}
-		// TODO se len(author) == 0 http.StatusNotFound
+		author, err := a.GetByID(id)
 
-		w.WriteHeader(http.StatusOK)
-		w.Header().Set("Content-Type", "application/json")
-		if err := json.NewEncoder(w).Encode(author); err != nil {
-			fmt.Println(err)
+		switch {
+		case err != nil:
+			w.WriteHeader(http.StatusServiceUnavailable)
+			w.Header().Set("Content-Type", "application/json")
+			// TODO log err
+			// TODO build error response message
+		case author == nil:
+			w.WriteHeader(http.StatusNotFound)
+		default:
+			w.WriteHeader(http.StatusOK)
+			w.Header().Set("Content-Type", "application/json")
+			if err := json.NewEncoder(w).Encode(author); err != nil {
+				fmt.Println(err)
+			}
 		}
 	}
 }

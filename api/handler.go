@@ -11,7 +11,7 @@ import (
 // SetUpRoutes set api routes
 func SetUpRoutes(r *mux.Router, a *business.Author, db *database.Database) {
 	r.HandleFunc("/authors", listAuthors(a)).Methods(http.MethodGet)
-	r.HandleFunc("/authors/{id:[0-9]+}", getAuthorByID(db)).Methods(http.MethodGet)
+	r.HandleFunc("/authors/{id:[0-9]+}", getAuthorByID(a)).Methods(http.MethodGet)
 	r.HandleFunc("/books", createBook(db)).Methods(http.MethodPost)
 	r.HandleFunc("/books", listBooks(db)).Methods(http.MethodGet)
 	r.HandleFunc("/books/{id:[0-9]+}", getBookByID(db)).Methods(http.MethodGet)

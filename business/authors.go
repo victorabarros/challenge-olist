@@ -82,3 +82,8 @@ func (a *Author) List(offset, limit int, name string) (*[]database.Author, error
 
 	return &authors, nil
 }
+
+// GetByID return author
+func (a *Author) GetByID(id int) (*database.Author, error) {
+	return a.DB.GetAuthorByID(id)
+}
