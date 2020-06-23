@@ -52,6 +52,7 @@ func listBooks(b business.Book) http.HandlerFunc {
 		}
 
 		books, err := b.List(filters)
+		// TODO use switch case
 		if err != nil {
 			w.WriteHeader(http.StatusServiceUnavailable)
 			// TODO add message response
@@ -111,19 +112,23 @@ func extractFilters(req *http.Request) (filters, []error) {
 	return f, errors
 }
 
-func getBookByID(db *database.Database) http.HandlerFunc {
+func getBookByID(b business.Book) http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
 		fmt.Println("Starting \"getBook\" route")
 
 		params := mux.Vars(req)
 		id, _ := strconv.Atoi(params["id"])
 
-		author, err := db.GetBookByID(id)
+		author, err := b.GetByID(id)
+		// TODO use switch case
 		if err != nil {
 			w.WriteHeader(http.StatusServiceUnavailable)
 			return
 		}
-		// TODO se len(author) == 0 http.StatusNotFound
+		if author == nil {
+			w.WriteHeader(http.StatusNotFound)
+			return
+		}
 
 		w.WriteHeader(http.StatusOK)
 		w.Header().Set("Content-Type", "application/json")

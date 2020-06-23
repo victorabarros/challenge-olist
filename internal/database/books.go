@@ -31,6 +31,7 @@ func (db *Database) InsertBook(book Book) (int64, error) {
 func (db *Database) ListBooks(filters map[string][]string) ([]Book, error) {
 	conditions := `WHERE true AND`
 
+	// TODO procurar uma forma melhor de fazer buscas complexas como esta
 	names, prs := filters[`Names`]
 	if prs {
 		conditions = fmt.Sprintf(`%s %s IN ('%s') AND`,
@@ -89,7 +90,7 @@ func (db *Database) ListBooks(filters map[string][]string) ([]Book, error) {
 }
 
 // GetBookByID return simgle Book
-func (db *Database) GetBookByID(id int) ([]Book, error) {
+func (db *Database) GetBookByID(id int) (*Book, error) {
 	// TODO Is necessary LIMIT 1?
 	query := fmt.Sprintf(
 		"SELECT id, name FROM books WHERE id = %d;",
@@ -100,8 +101,11 @@ func (db *Database) GetBookByID(id int) ([]Book, error) {
 	if err := db.Connection.Select(&books, query); err != nil {
 		return nil, err
 	}
+	if len(books) == 0 {
+		return nil, nil
+	}
 
-	return books, nil
+	return &books[0], nil
 }
 
 // UpdateBook return a sub section
