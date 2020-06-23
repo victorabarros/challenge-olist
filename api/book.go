@@ -40,7 +40,7 @@ func createBook(b business.Book) http.HandlerFunc {
 }
 
 // listBooks return list
-func listBooks(db *database.Database) http.HandlerFunc {
+func listBooks(b business.Book) http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
 		fmt.Println("Starting \"listBooks\" route")
 
@@ -51,30 +51,26 @@ func listBooks(db *database.Database) http.HandlerFunc {
 			return
 		}
 
-		ans, err := db.ListBooks(filters)
+		books, err := b.List(filters)
 		if err != nil {
 			w.WriteHeader(http.StatusServiceUnavailable)
 			// TODO add message response
 			return
-		}
-		books := ans
-
-		for idx, book := range books {
-			authors, _ := db.GetAuthorsIDByBookID(book.ID)
-			books[idx].Authors = authors
+		} else if books == nil {
+			w.WriteHeader(http.StatusNotFound)
+			return
 		}
 
 		w.WriteHeader(http.StatusOK)
 		w.Header().Set("Content-Type", "application/json")
-
-		if err := json.NewEncoder(w).
-			Encode(books); err != nil {
+		if err := json.NewEncoder(w).Encode(books); err != nil {
 			fmt.Println(err)
 		}
 	}
 }
 
 func extractFilters(req *http.Request) (filters, []error) {
+	// TODO mudar retorno de []error para error, como no controller de authors
 	// jsonschema validator https://github.com/xeipuuv/gojsonschema
 	params := req.URL.Query()
 	f := make(filters)

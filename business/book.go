@@ -34,3 +34,21 @@ func (b *Book) Create(book database.Book) error {
 	}
 	return nil
 }
+
+// List books after filter
+func (b *Book) List(filters map[string][]string) ([]database.Book, error) {
+	// TODO investigar bug http://localhost:8092/books?name=gopl&author= resposta 503
+	ans, err := b.DB.ListBooks(filters)
+	if err != nil {
+		return nil, err
+	}
+
+	books := ans
+
+	for idx, book := range books {
+		// TODO fazer essa busca usando business.Author
+		authors, _ := b.DB.GetAuthorsIDByBookID(book.ID)
+		books[idx].Authors = authors
+	}
+	return books, nil
+}
