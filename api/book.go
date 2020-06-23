@@ -139,14 +139,13 @@ func getBook(b business.Book) http.HandlerFunc {
 }
 
 // putBook return list
-func putBook(db *database.Database) http.HandlerFunc {
+func putBook(b business.Book) http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
 		fmt.Println("Starting \"putBook\" route")
 
 		params := mux.Vars(req)
 		bookID, _ := strconv.Atoi(params["id"])
-		// TODO handler error
-		// TODO check if bookID
+		// TODO check if bookID exist?
 
 		book := database.Book{}
 		err := json.NewDecoder(req.Body).Decode(&book)
@@ -157,29 +156,11 @@ func putBook(db *database.Database) http.HandlerFunc {
 		// TODO validar se edition, name, publication_year e len(authors) != 0
 		// => badrequest
 		book.ID = bookID
-
-		_ = db.UpdateBook(book)
-		// if err != nil {
-		// 	fmt.Println(err)
-		// 	http.Error(w, err.Error(), http.StatusServiceUnavailable)
-		// 	// TODO mensagem de resposta
-		// 	return
-		// }
-
-		_ = db.DeleteBookAuthors(book.ID)
-		// if err != nil {
-		// 	fmt.Println(err)
-		// 	http.Error(w, err.Error(), http.StatusServiceUnavailable)
-		// 	// TODO mensagem de resposta
-		// 	return
-		// }
-
-		_ = db.InsertBookAuthors(book.ID, book.Authors)
-		// if err != nil {
-		// 	http.Error(w, err.Error(), http.StatusServiceUnavailable)
-		// 	// TODO mensagem de resposta
-		// 	return
-		// }
+		err = b.Update(book)
+		if err != nil {
+			w.WriteHeader(http.StatusServiceUnavailable)
+			return
+		}
 
 		w.WriteHeader(http.StatusOK)
 		w.Header().Set("Content-Type", "application/json")

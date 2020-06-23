@@ -8,6 +8,7 @@ import (
 
 // Book business layer
 type Book struct {
+	// TODO faz sentido usar uma interface? Ficaria bem grande
 	DB database.Database
 }
 
@@ -56,9 +57,32 @@ func (b *Book) List(filters map[string][]string) ([]database.Book, error) {
 // Get books after filter
 func (b *Book) Get(id int) (*database.Book, error) {
 	return b.DB.GetBookByID(id)
+	// TODO adicionar authores à resposta
 }
 
 // Delete books after filter
 func (b *Book) Delete(id int) error {
 	return b.DB.DeleteBook(id)
+}
+
+// Update books after filter
+func (b *Book) Update(book database.Book) error {
+	err := b.DB.UpdateBook(book)
+	if err != nil {
+		return err
+	}
+
+	err = b.DB.DeleteBookAuthors(book.ID)
+	if err != nil {
+		return err
+	}
+
+	err = b.DB.InsertBookAuthors(book.ID, book.Authors)
+	if err != nil {
+		return err
+	}
+	// TODO é possível executar tudo numa transação só?
+	// Minimizando a chance de erro
+
+	return nil
 }
