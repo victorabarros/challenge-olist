@@ -64,3 +64,21 @@ func deduplicate(arr []string) []string {
 
 	return ans
 }
+
+// List return authors using params inputed // TODO improve message
+func (a *Author) List(offset, limit int, name string) (*[]database.Author, error) {
+	if name != "" {
+		author, err := a.DB.GetAuthorByName(name)
+		if err != nil {
+			return nil, err
+		}
+		return &author, nil
+	}
+
+	authors, err := a.DB.ListAuthors(limit, offset)
+	if err != nil {
+		return nil, err
+	}
+
+	return &authors, nil
+}

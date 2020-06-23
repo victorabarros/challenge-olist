@@ -7,89 +7,93 @@ import (
 	"strconv"
 
 	"github.com/gorilla/mux"
+	"github.com/victorabarros/challenge-olist/business"
 	"github.com/victorabarros/challenge-olist/internal/database"
 )
 
 // listAuthors return list
-func listAuthors(db *database.Database) http.HandlerFunc {
+func listAuthors(a *business.Author) http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
 		fmt.Println("Starting \"listAuthors\" route")
 
-		offset, limit, name, errors := validateListQueryParams(req)
-		if len(errors) > 0 {
+		offset, limit, name, err := validateListQueryParams(req)
+		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
-			json.NewEncoder(w).Encode(struct{ messages []error }{errors})
-			return
-		}
-
-		if name != "" {
-			author, err := db.GetAuthorByName(name)
-			if err != nil {
-				w.WriteHeader(http.StatusServiceUnavailable)
-				return
-			}
-			// TODO se len(author) == 0 http.StatusNotFound
-
-			w.WriteHeader(http.StatusOK)
 			w.Header().Set("Content-Type", "application/json")
-			if err := json.NewEncoder(w).
-				Encode(author); err != nil {
+			if err := json.NewEncoder(w).Encode(err.Error()); err != nil {
 				fmt.Println(err)
 			}
 			return
 		}
 
-		authors, err := db.ListAuthors(limit, offset)
-		if err != nil {
-			w.WriteHeader(http.StatusServiceUnavailable)
-			// TODO add message response
-			return
-		}
+		authors, err := a.List(offset, limit, name)
 
-		w.WriteHeader(http.StatusOK)
-		w.Header().Set("Content-Type", "application/json")
-		if err := json.NewEncoder(w).
-			Encode(authors); err != nil {
-			fmt.Println(err)
+		switch {
+		case err != nil:
+			w.WriteHeader(http.StatusServiceUnavailable)
+			// TODO log err
+			// TODO build error response message
+		case len(*authors) == 0:
+			w.WriteHeader(http.StatusNotFound)
+		default:
+			w.WriteHeader(http.StatusOK)
+			w.Header().Set("Content-Type", "application/json")
+			if err := json.NewEncoder(w).Encode(authors); err != nil {
+				fmt.Println(err)
+			}
 		}
 	}
 }
 
 // TODO improve name
 func validateListQueryParams(req *http.Request) (
-	offset, limit int, name string, errors []error) {
+	offset int, limit int, name string, err error) {
 	// jsonschema validator https://github.com/xeipuuv/gojsonschema
 	params := req.URL.Query()
+
+	nameQueue, prs := params["name"]
+	if prs {
+		// TODO add handler if len > 1
+		name = nameQueue[0]
+	}
+
+	var e error
 
 	limitStr, prs := params["limit"]
 	if !prs {
 		// Default value
 		limitStr = []string{"100"} // TODO move to env
 	}
-	// TODO if len > 1 append err
-	limit, err := strconv.Atoi(limitStr[0])
-	if err != nil {
-		errors = append(errors, err)
+	if len(limitStr) > 1 {
+		err = fmt.Errorf("%s\n%s", err, "Only one parameter is valid to 'limit'")
+	} else {
+		limit, e = strconv.Atoi(limitStr[0])
+		if e != nil {
+			err = fmt.Errorf("%s\n%s", err, e)
+		} else if limit < 0 {
+			err = fmt.Errorf("%s\n%s", err, "'limit' parameter must be positive")
+			limit = *new(int)
+		}
 	}
 
 	offsetStr, prs := params["offset"]
 	if !prs {
 		// Default value
-		offsetStr = []string{"0"}
+		offsetStr = []string{"0"} // TODO env
 	}
-	// TODO if len > 1 append err
-	offset, err = strconv.Atoi(offsetStr[0])
-	if err != nil {
-		errors = append(errors, err)
+	if len(offsetStr) > 1 {
+		err = fmt.Errorf("%s\n%s", err, "Only one parameter is valid to 'offset'")
+	} else {
+		offset, e = strconv.Atoi(offsetStr[0])
+		if e != nil {
+			err = fmt.Errorf("%s\n%s", err, e)
+		} else if offset < 0 {
+			err = fmt.Errorf("%s\n%s", err, "'offset' parameter must be positive")
+			offset = *new(int)
+		}
 	}
 
-	nameQueue, prs := params["name"]
-	if prs {
-		// TODO if len > 1 append err? or return more then one?
-		name = nameQueue[0]
-	}
 	return
-	// TODO: validar se são offset e limit são inteiros positivos
 }
 
 func getAuthorByID(db *database.Database) http.HandlerFunc {
