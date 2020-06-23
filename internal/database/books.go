@@ -62,7 +62,7 @@ func (db *Database) DeleteBookAuthors(bookID int) error {
 }
 
 // ListBooks return a sub section
-func (db *Database) ListBooks(filters map[string][]string) (*[]Book, error) {
+func (db *Database) ListBooks(filters map[string][]string) ([]Book, error) {
 	conditions := `WHERE true AND`
 
 	names, prs := filters[`Names`]
@@ -120,7 +120,24 @@ func (db *Database) ListBooks(filters map[string][]string) (*[]Book, error) {
 		return nil, err
 	}
 
-	return &books, nil
+	return books, nil
+}
+
+// GetBookByID return simgle Book
+func (db *Database) GetBookByID(id int) ([]Book, error) {
+	// TODO Is necessary LIMIT 1?
+	query := fmt.Sprintf(
+		"SELECT id, name FROM books WHERE id = %d;",
+		id,
+	)
+
+	books := []Book{}
+	if err := db.Connection.Select(&books, query); err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+
+	return books, nil
 }
 
 // UpdateBook return a sub section

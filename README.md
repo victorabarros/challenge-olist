@@ -4,17 +4,6 @@
 
 ## Specification
 
-### 3. CRUD of books
-
-- GET by id?
-
-To retrieve a book (in easy mode) we can filter by 4 fields (or a composition of these four):
-
-- name
-- publication_year
-- edition
-- author
-
 ## Project Requirements
 
 - [Effective Go](https://golang.org/doc/effective_go.html)

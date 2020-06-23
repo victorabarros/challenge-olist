@@ -69,7 +69,7 @@ func listBooks(db *database.Database) http.HandlerFunc {
 			// TODO add message response
 			return
 		}
-		books := *ans
+		books := ans
 
 		for idx, book := range books {
 			authors, _ := db.GetAuthorsIDByBookID(book.ID)
@@ -125,6 +125,28 @@ func extractFilters(req *http.Request) (filters, []error) {
 	}
 
 	return f, errors
+}
+
+func getBookByID(db *database.Database) http.HandlerFunc {
+	return func(w http.ResponseWriter, req *http.Request) {
+		fmt.Println("Starting \"getBook\" route")
+
+		params := mux.Vars(req)
+		id, _ := strconv.Atoi(params["id"])
+
+		author, err := db.GetBookByID(id)
+		if err != nil {
+			w.WriteHeader(http.StatusServiceUnavailable)
+			return
+		}
+		// TODO se len(author) == 0 http.StatusNotFound
+
+		w.WriteHeader(http.StatusOK)
+		w.Header().Set("Content-Type", "application/json")
+		if err := json.NewEncoder(w).Encode(author); err != nil {
+			fmt.Println(err)
+		}
+	}
 }
 
 // putBook return list
