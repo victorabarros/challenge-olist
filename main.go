@@ -9,6 +9,7 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/gorilla/mux"
 	"github.com/victorabarros/challenge-olist/api"
+	"github.com/victorabarros/challenge-olist/business"
 	"github.com/victorabarros/challenge-olist/internal/database"
 )
 
@@ -40,16 +41,20 @@ func main() {
 		panic(err)
 	}
 
-	db.LoadCsv(*csvName)
+	author := business.Author{
+		DB: db,
+	}
+
+	author.LoadCsv(*csvName)
 
 	srv := newServer(db)
 	fmt.Printf("Up apllication at port %s\n", *port)
 	panic(srv.ListenAndServe())
 }
 
-func newServer(db *database.Database) *http.Server {
+func newServer(db database.Database) *http.Server {
 	r := mux.NewRouter()
-	api.SetUpRoutes(r, db)
+	api.SetUpRoutes(r, &db)
 
 	srv := http.Server{
 		Addr:    fmt.Sprintf(":%s", *port),

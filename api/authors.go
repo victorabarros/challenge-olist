@@ -14,8 +14,8 @@ import (
 func listAuthors(db *database.Database) http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
 		fmt.Println("Starting \"listAuthors\" route")
-		offset, limit, name, errors := validateListQueryParams(req)
 
+		offset, limit, name, errors := validateListQueryParams(req)
 		if len(errors) > 0 {
 			w.WriteHeader(http.StatusBadRequest)
 			json.NewEncoder(w).Encode(struct{ messages []error }{errors})
