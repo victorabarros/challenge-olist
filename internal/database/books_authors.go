@@ -48,6 +48,7 @@ func (db *Database) InsertBookAuthors(bookID int, authorIDs []int) error {
 		values,
 	)
 
+	// TODO look for a method that returns error
 	_ = db.Connection.MustExec(query)
 
 	return nil

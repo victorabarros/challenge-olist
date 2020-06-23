@@ -45,16 +45,20 @@ func main() {
 		DB: db,
 	}
 
+	book := business.Book{
+		DB: db,
+	}
+
 	author.LoadCsv(*csvName)
 
-	srv := newServer(author, db)
+	srv := newServer(&author, book, db)
 	fmt.Printf("Up apllication at port %s\n", *port)
 	panic(srv.ListenAndServe())
 }
 
-func newServer(a business.Author, db database.Database) *http.Server {
+func newServer(a *business.Author, b business.Book, db database.Database) *http.Server {
 	r := mux.NewRouter()
-	api.SetUpRoutes(r, &a, &db)
+	api.SetUpRoutes(r, a, b, &db)
 
 	srv := http.Server{
 		Addr:    fmt.Sprintf(":%s", *port),

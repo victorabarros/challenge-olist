@@ -6,39 +6,27 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/victorabarros/challenge-olist/business"
+
 	"github.com/gorilla/mux"
 	"github.com/victorabarros/challenge-olist/internal/database"
 )
 
 type filters map[string][]string
 
-func createBook(db *database.Database) http.HandlerFunc {
+func createBook(b business.Book) http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
 		fmt.Println("Starting \"createBook\" route")
 		var book database.Book
 
 		err := json.NewDecoder(req.Body).Decode(&book)
 		if err != nil {
+			// TODO make the same at /api/author
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
 
-		for _, id := range book.Authors {
-			// db.GetAuthorByID(id)
-			// TODO chegar se authores existe no banco
-			fmt.Println(id)
-		}
-
-		// TODO Validar se o livro já não existe
-		id, err := db.InsertBook(book)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusServiceUnavailable)
-			// TODO mensagem de resposta
-			return
-		}
-		book.ID = int(id)
-
-		err = db.InsertBookAuthors(book.ID, book.Authors)
+		err = b.Create(book)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusServiceUnavailable)
 			// TODO mensagem de resposta
