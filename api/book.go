@@ -10,6 +10,8 @@ import (
 	"github.com/victorabarros/challenge-olist/internal/database"
 )
 
+type filters map[string][]string
+
 func createBook(db *database.Database) http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
 		fmt.Println("Starting \"createBook\" route")
@@ -54,7 +56,14 @@ func listBooks(db *database.Database) http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
 		fmt.Println("Starting \"listBooks\" route")
 
-		ans, err := db.ListBooks()
+		filters, errors := extractFilters(req)
+		if len(errors) > 0 {
+			w.WriteHeader(http.StatusBadRequest)
+			json.NewEncoder(w).Encode(struct{ messages []error }{errors})
+			return
+		}
+
+		ans, err := db.ListBooks(filters)
 		if err != nil {
 			w.WriteHeader(http.StatusServiceUnavailable)
 			// TODO add message response
@@ -64,7 +73,7 @@ func listBooks(db *database.Database) http.HandlerFunc {
 
 		for idx, book := range books {
 			authors, _ := db.GetAuthorsIDByBookID(book.ID)
-			books[idx].Authors = *authors
+			books[idx].Authors = authors
 		}
 
 		w.WriteHeader(http.StatusOK)
@@ -75,6 +84,47 @@ func listBooks(db *database.Database) http.HandlerFunc {
 			fmt.Println(err)
 		}
 	}
+}
+
+func extractFilters(req *http.Request) (filters, []error) {
+	// jsonschema validator https://github.com/xeipuuv/gojsonschema
+	params := req.URL.Query()
+	f := make(filters)
+	errors := []error{}
+
+	publications, prs := params["publication"]
+	if prs {
+		for _, val := range publications {
+			_, err := strconv.Atoi(val)
+			if err != nil {
+				errors = append(errors, err)
+			}
+		}
+		f["PublicationYears"] = publications
+	}
+
+	editions, prs := params["edition"]
+	if prs {
+		for _, val := range editions {
+			_, err := strconv.Atoi(val)
+			if err != nil {
+				errors = append(errors, err)
+			}
+		}
+		f["Editions"] = editions
+	}
+
+	authorsIDs, prs := params["author"]
+	if prs {
+		f["Authors"] = authorsIDs
+	}
+
+	names, prs := params["name"]
+	if prs {
+		f["Names"] = names
+	}
+
+	return f, errors
 }
 
 // putBook return list

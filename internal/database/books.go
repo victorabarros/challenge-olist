@@ -1,6 +1,9 @@
 package database
 
-import "fmt"
+import (
+	"fmt"
+	"strings"
+)
 
 // Book model
 type Book struct {
@@ -59,15 +62,57 @@ func (db *Database) DeleteBookAuthors(bookID int) error {
 }
 
 // ListBooks return a sub section
-func (db *Database) ListBooks() (*[]Book, error) {
-	query := `
+func (db *Database) ListBooks(filters map[string][]string) (*[]Book, error) {
+	conditions := `WHERE true AND`
+
+	names, prs := filters[`Names`]
+	if prs {
+		conditions = fmt.Sprintf(`%s %s IN ('%s') AND`,
+			conditions,
+			`b.name`,
+			strings.Join(names, `', '`),
+		)
+	}
+
+	editions, prs := filters[`Editions`]
+	if prs {
+		conditions = fmt.Sprintf(`%s %s IN (%s) AND`,
+			conditions,
+			`b.edition`,
+			strings.Join(editions, `, `),
+		)
+	}
+
+	publicationYears, prs := filters[`PublicationYears`]
+	if prs {
+		conditions = fmt.Sprintf(`%s %s IN (%s) AND`,
+			conditions,
+			`b.publication_year`,
+			strings.Join(publicationYears, `, `),
+		)
+	}
+
+	authors, prs := filters[`Authors`]
+	if prs {
+		conditions = fmt.Sprintf(`%s %s IN (%s) AND`,
+			conditions,
+			`ba.author_id`,
+			strings.Join(authors, `, `),
+		)
+	}
+	conditions = conditions[:len(conditions)-3]
+
+	query := fmt.Sprintf(`
 		SELECT b.id AS id, b.name AS name, b.edition AS edition
 		,b.publication_year AS publication_year
 		#,GROUP_CONCAT(ba.author_id) AS authors
 		FROM books b
-		#LEFT JOIN books_authors ba ON b.id = ba.book_id
+		LEFT JOIN books_authors ba ON b.id = ba.book_id
+		%s
 		#GROUP BY b.id
-		;`
+		;`,
+		conditions,
+	)
 
 	books := []Book{}
 	if err := db.Connection.Select(&books, query); err != nil {
