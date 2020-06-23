@@ -145,7 +145,7 @@ func putBook(b business.Book) http.HandlerFunc {
 
 		params := mux.Vars(req)
 		bookID, _ := strconv.Atoi(params["id"])
-		// TODO check if bookID exist?
+		// TODO check if bookID exist! bug http://localhost:8092/books/1091
 
 		book := database.Book{}
 		err := json.NewDecoder(req.Body).Decode(&book)
@@ -173,13 +173,12 @@ func putBook(b business.Book) http.HandlerFunc {
 }
 
 // patchBook return list
-func patchBook(db *database.Database) http.HandlerFunc {
+func patchBook(b business.Book) http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
 		fmt.Println("Starting \"patchBook\" route")
 
 		params := mux.Vars(req)
 		bookID, _ := strconv.Atoi(params["id"])
-		// TODO handler error
 		// TODO check if bookID exists, if not: status not found
 
 		book := database.Book{}
@@ -187,29 +186,21 @@ func patchBook(db *database.Database) http.HandlerFunc {
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
+		} else if book.Authors != nil && len(book.Authors) == 0 {
+			http.Error(w, "'Authors' can't be empty.", http.StatusBadRequest)
+			return
 		}
 
 		book.ID = bookID
 
-		_ = db.PartialUpdateBook(book)
-		// if err != nil {
-		// 	fmt.Println(err)
-		// 	http.Error(w, err.Error(), http.StatusServiceUnavailable)
-		// 	// TODO mensagem de resposta
-		// 	return
-		// }
-
-		if book.Authors != nil && len(book.Authors) != 0 {
-			// TODO improve this update.
-			// Is possible make with only one connection?
-			_ = db.DeleteBookAuthors(book.ID)
-
-			_ = db.InsertBookAuthors(book.ID, book.Authors)
+		err = b.PartialUpdate(book)
+		if err != nil {
+			w.WriteHeader(http.StatusServiceUnavailable)
+			return
 		}
 
 		w.WriteHeader(http.StatusOK)
 		w.Header().Set("Content-Type", "application/json")
-
 		// TODO improve message response
 		if err := json.NewEncoder(w).Encode(bookID); err != nil {
 			fmt.Println(err)

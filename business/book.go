@@ -96,3 +96,27 @@ func (b *Book) Update(book database.Book) error {
 
 	return nil
 }
+
+// PartialUpdate books after filter
+func (b *Book) PartialUpdate(book database.Book) error {
+	err := b.DB.PartialUpdateBook(book)
+	if err != nil {
+		return err
+	}
+
+	if book.Authors != nil && len(book.Authors) != 0 {
+		// TODO improve this update.
+		// Is possible make with only one connection?
+		err = b.DB.DeleteBookAuthors(book.ID)
+		if err != nil {
+			return err
+		}
+
+		err = b.DB.InsertBookAuthors(book.ID, book.Authors)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
