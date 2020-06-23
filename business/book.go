@@ -56,8 +56,18 @@ func (b *Book) List(filters map[string][]string) ([]database.Book, error) {
 
 // Get books after filter
 func (b *Book) Get(id int) (*database.Book, error) {
-	return b.DB.GetBookByID(id)
-	// TODO adicionar authores à resposta
+	book, err := b.DB.GetBookByID(id)
+	if err != nil {
+		return nil, err
+	}
+
+	authors, _ := b.DB.GetAuthorsIDByBookID(book.ID)
+	if err != nil {
+		return nil, err
+	}
+	book.Authors = authors
+
+	return book, nil
 }
 
 // Delete books after filter
