@@ -13,7 +13,7 @@ CREATE TABLE `books` (
 
 CREATE TABLE `authors` (
   `id`             INT         NOT NULL AUTO_INCREMENT,
-  `name`           VARCHAR(50) NOT NULL               ,
+  `name`           VARCHAR(50) NOT NULL UNIQUE        ,
   PRIMARY KEY (`id`)
 );
 
