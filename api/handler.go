@@ -14,9 +14,9 @@ func SetUpRoutes(r *mux.Router, a *business.Author, b business.Book, db *databas
 	r.HandleFunc("/authors/{id:[0-9]+}", getAuthorByID(a)).Methods(http.MethodGet)
 	r.HandleFunc("/books", createBook(b)).Methods(http.MethodPost)
 	r.HandleFunc("/books", listBooks(b)).Methods(http.MethodGet)
-	r.HandleFunc("/books/{id:[0-9]+}", getBookByID(b)).Methods(http.MethodGet)
+	r.HandleFunc("/books/{id:[0-9]+}", getBook(b)).Methods(http.MethodGet)
 	r.HandleFunc("/books/{id:[0-9]+}", putBook(db)).Methods(http.MethodPut)
 	r.HandleFunc("/books/{id:[0-9]+}", patchBook(db)).Methods(http.MethodPatch)
-	r.HandleFunc("/books/{id:[0-9]+}", deleteBook(db)).Methods(http.MethodDelete)
+	r.HandleFunc("/books/{id:[0-9]+}", deleteBook(b)).Methods(http.MethodDelete)
 	// TODO add liveness and probeness
 }

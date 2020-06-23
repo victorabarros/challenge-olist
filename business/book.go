@@ -53,7 +53,12 @@ func (b *Book) List(filters map[string][]string) ([]database.Book, error) {
 	return books, nil
 }
 
-// GetByID books after filter
-func (b *Book) GetByID(id int) (*database.Book, error) {
+// Get books after filter
+func (b *Book) Get(id int) (*database.Book, error) {
 	return b.DB.GetBookByID(id)
+}
+
+// Delete books after filter
+func (b *Book) Delete(id int) error {
+	return b.DB.DeleteBook(id)
 }

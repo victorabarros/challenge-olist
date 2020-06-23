@@ -112,14 +112,14 @@ func extractFilters(req *http.Request) (filters, []error) {
 	return f, errors
 }
 
-func getBookByID(b business.Book) http.HandlerFunc {
+func getBook(b business.Book) http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
 		fmt.Println("Starting \"getBook\" route")
 
 		params := mux.Vars(req)
 		id, _ := strconv.Atoi(params["id"])
 
-		author, err := b.GetByID(id)
+		author, err := b.Get(id)
 		// TODO use switch case
 		if err != nil {
 			w.WriteHeader(http.StatusServiceUnavailable)
@@ -237,16 +237,20 @@ func patchBook(db *database.Database) http.HandlerFunc {
 }
 
 // deleteBook return list
-func deleteBook(db *database.Database) http.HandlerFunc {
+func deleteBook(b business.Book) http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
 		fmt.Println("Starting \"deleteBook\" route")
 
 		params := mux.Vars(req)
 		bookID, _ := strconv.Atoi(params["id"])
-		// TODO handler error
-		// TODO check if bookID exists, if not: status not found
+		// TODO É necessário validar se o bookID existe? status not found
 
-		_ = db.DeleteBook(bookID)
+		err := b.Delete(bookID)
+		if err != nil {
+			w.WriteHeader(http.StatusServiceUnavailable)
+			// TODO add message response
+			return
+		}
 
 		w.WriteHeader(http.StatusNoContent)
 		w.Header().Set("Content-Type", "application/json")
