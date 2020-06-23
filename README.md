@@ -6,8 +6,7 @@
 
 ### 3. CRUD of books
 
-- Update -> put and patch
-- Delete
+- GET by id?
 
 To retrieve a book (in easy mode) we can filter by 4 fields (or a composition of these four):
 
@@ -40,7 +39,7 @@ To retrieve a book (in easy mode) we can filter by 4 fields (or a composition of
 - [ ] code server (try tdd)
 - [ ] jmeter load test; >> 1000 tps
 - [ ] code climate
-- [ ] code tests 80%unit/20%integration
+- [ ] code tests >= 75% (80%unit/20%integration)
 - [ ] commit postman json libary
 - [ ] heroku
 - [ ] docker-compose olist/api olist/postgress

@@ -101,6 +101,7 @@ func (db *Database) UpdateBook(book Book) error {
 func (db *Database) PartialUpdateBook(book Book) error {
 	var sets string
 
+	// TODO build businness layer and send this validation to there
 	if book.Name != "" {
 		sets = fmt.Sprintf(`%s name = '%s',`, sets, book.Name)
 	}
@@ -124,6 +125,18 @@ func (db *Database) PartialUpdateBook(book Book) error {
 	query := fmt.Sprintf(
 		`UPDATE books SET%s WHERE id = %d;`,
 		sets, book.ID,
+	)
+
+	_ = db.Connection.MustExec(query)
+
+	return nil
+}
+
+// DeleteBook inserts new book to db
+func (db *Database) DeleteBook(bookID int) error {
+	query := fmt.Sprintf(
+		`DELETE FROM books WHERE id = %d;`,
+		bookID,
 	)
 
 	_ = db.Connection.MustExec(query)

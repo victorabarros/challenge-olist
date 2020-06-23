@@ -161,19 +161,8 @@ func patchBook(db *database.Database) http.HandlerFunc {
 			// TODO improve this update.
 			// Is possible make with only one connection?
 			_ = db.DeleteBookAuthors(book.ID)
-			if err != nil {
-				fmt.Println(err)
-				http.Error(w, err.Error(), http.StatusServiceUnavailable)
-				// TODO mensagem de resposta
-				return
-			}
 
 			_ = db.InsertBookAuthors(book.ID, book.Authors)
-			if err != nil {
-				http.Error(w, err.Error(), http.StatusServiceUnavailable)
-				// TODO mensagem de resposta
-				return
-			}
 		}
 
 		w.WriteHeader(http.StatusOK)
@@ -183,5 +172,22 @@ func patchBook(db *database.Database) http.HandlerFunc {
 		if err := json.NewEncoder(w).Encode(bookID); err != nil {
 			fmt.Println(err)
 		}
+	}
+}
+
+// deleteBook return list
+func deleteBook(db *database.Database) http.HandlerFunc {
+	return func(w http.ResponseWriter, req *http.Request) {
+		fmt.Println("Starting \"deleteBook\" route")
+
+		params := mux.Vars(req)
+		bookID, _ := strconv.Atoi(params["id"])
+		// TODO handler error
+		// TODO check if bookID exists, if not: status not found
+
+		_ = db.DeleteBook(bookID)
+
+		w.WriteHeader(http.StatusNoContent)
+		w.Header().Set("Content-Type", "application/json")
 	}
 }
