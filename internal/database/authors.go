@@ -58,6 +58,7 @@ func (db *Database) GetAuthorByID(id int) (*Author, error) {
 	if len(authors) == 0 {
 		return nil, err
 	}
+	// As id is pk, isn't possible returns more than 1 line
 	author := authors[0]
 	return &author, err
 }

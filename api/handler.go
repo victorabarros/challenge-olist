@@ -19,3 +19,7 @@ func SetUpRoutes(r *mux.Router, a *business.Author, b business.Book) {
 	r.HandleFunc("/books/{id:[0-9]+}", deleteBook(b)).Methods(http.MethodDelete)
 	// TODO add liveness and probeness
 }
+
+type response struct {
+	Message string `json:"message"`
+}
