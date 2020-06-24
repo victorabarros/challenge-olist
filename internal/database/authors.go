@@ -2,6 +2,7 @@ package database
 
 import (
 	"fmt"
+	"strings"
 )
 
 // Author model
@@ -29,23 +30,21 @@ func (db *Database) CreateAuthor(name string) (bool, error) {
 }
 
 // ListAuthors return a sub section
-func (db *Database) ListAuthors(limit, offset int) ([]Author, error) { // TODO improve name
+func (db *Database) ListAuthors(limit, offset int, names []string) ([]Author, error) {
+	var sets string
+	if len(names) > 0 {
+		sets = fmt.Sprintf("WHERE name IN ('%s')",
+			strings.Join(names, `', '`),
+		)
+	}
+
 	query := fmt.Sprintf(
-		"SELECT id, name FROM authors LIMIT %d OFFSET %d;",
+		"SELECT id, name FROM authors %s LIMIT %d OFFSET %d;",
+		sets,
 		limit,
 		offset,
 	)
 
-	return db.selectAuthors(query)
-}
-
-// GetAuthorByName return simgle Author
-func (db *Database) GetAuthorByName(name string) ([]Author, error) {
-	query := fmt.Sprintf(
-		"SELECT id, name FROM authors WHERE name = '%s';",
-		name,
-	)
-	// TODO: retornar apenas *Author
 	return db.selectAuthors(query)
 }
 

@@ -120,7 +120,6 @@ func (db *Database) UpdateBook(book Book) error {
 		`UPDATE books SET %s WHERE id = %d;`,
 		sets, book.ID,
 	)
-	fmt.Println(query)
 
 	_ = db.Connection.MustExec(query)
 

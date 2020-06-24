@@ -10,29 +10,38 @@ import (
 	"github.com/victorabarros/challenge-olist/business"
 )
 
+type response struct {
+	Message string `json:"message"`
+}
+
 // listAuthors return list
 func listAuthors(a *business.Author) http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
 		fmt.Println("Starting \"listAuthors\" route")
 
-		offset, limit, name, err := validateListQueryParams(req)
+		limit, offset, names, err := validateListParams(req)
 		if err != nil {
+			// TODO log err
 			w.WriteHeader(http.StatusBadRequest)
 			w.Header().Set("Content-Type", "application/json")
-			if err := json.NewEncoder(w).Encode(err.Error()); err != nil {
+			if err := json.NewEncoder(w).
+				Encode(response{err.Error()}); err != nil {
 				fmt.Println(err)
 			}
 			return
 		}
 
-		authors, err := a.List(offset, limit, name)
+		authors, err := a.List(limit, offset, names)
 
 		switch {
 		case err != nil:
+			// TODO log err
 			w.WriteHeader(http.StatusServiceUnavailable)
 			w.Header().Set("Content-Type", "application/json")
-			// TODO log err
-			// TODO build error response message
+			if err := json.NewEncoder(w).
+				Encode(response{"Fail to query no DB."}); err != nil {
+				fmt.Println(err)
+			}
 		case len(*authors) == 0:
 			w.WriteHeader(http.StatusNotFound)
 		default:
@@ -45,16 +54,15 @@ func listAuthors(a *business.Author) http.HandlerFunc {
 	}
 }
 
-// TODO improve name
-func validateListQueryParams(req *http.Request) (
-	offset int, limit int, name string, err error) {
+func validateListParams(req *http.Request) (
+	limit int, offset int, names []string, err error) {
+	// TODO can merge with filters from books?
 	// jsonschema validator https://github.com/xeipuuv/gojsonschema
 	params := req.URL.Query()
 
-	nameQueue, prs := params["name"]
-	if prs {
-		// TODO add handler if len > 1
-		name = nameQueue[0]
+	names, prs := params["name"]
+	if !prs {
+		names = nil
 	}
 
 	var e error
@@ -65,13 +73,16 @@ func validateListQueryParams(req *http.Request) (
 		limitStr = []string{"100"} // TODO move to env
 	}
 	if len(limitStr) > 1 {
-		err = fmt.Errorf("%s\n%s", err, "Only one parameter is valid to 'limit'")
+		err = fmt.Errorf("%s\r\n%s", err,
+			"Only one parameter is valid to 'limit'")
 	} else {
 		limit, e = strconv.Atoi(limitStr[0])
 		if e != nil {
-			err = fmt.Errorf("%s\n%s", err, e)
+			err = fmt.Errorf("%s\r\n%s", err,
+				e)
 		} else if limit < 0 {
-			err = fmt.Errorf("%s\n%s", err, "'limit' parameter must be positive")
+			err = fmt.Errorf("%s\r\n%s", err,
+				"'limit' parameter must be positive")
 			limit = *new(int)
 		}
 	}
@@ -82,13 +93,15 @@ func validateListQueryParams(req *http.Request) (
 		offsetStr = []string{"0"} // TODO env
 	}
 	if len(offsetStr) > 1 {
-		err = fmt.Errorf("%s\n%s", err, "Only one parameter is valid to 'offset'")
+		err = fmt.Errorf("%s\r\n%s", err,
+			"Only one parameter is valid to 'offset'")
 	} else {
 		offset, e = strconv.Atoi(offsetStr[0])
 		if e != nil {
-			err = fmt.Errorf("%s\n%s", err, e)
+			err = fmt.Errorf("%s\r\n%s", err, e)
 		} else if offset < 0 {
-			err = fmt.Errorf("%s\n%s", err, "'offset' parameter must be positive")
+			err = fmt.Errorf("%s\r\n%s", err,
+				"'offset' parameter must be positive")
 			offset = *new(int)
 		}
 	}
