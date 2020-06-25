@@ -15,13 +15,7 @@ import (
 
 var (
 	csvName = flag.String("csv", "Authors.csv", "Authors file")
-	port    = flag.String("port", "8092", "Server port") // TODO move to env
 )
-
-// func init() {
-// 	// https://golang.org/doc/effective_go.html#init
-// 	// https://github.com/GoogleCloudPlatform/microservices-demo/blob/c78fd12a526c8ba889283ffdbbe4e7d011529935/src/productcatalogservice/server.go#L59
-// }
 
 func main() {
 	flag.Parse() // `go run main.go -h` for help flag
@@ -29,6 +23,8 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
+	// TODO use internal/configuration
+	// TODO set loglevel
 	dsn := fmt.Sprintf("%s:%s@tcp(%s)/%s",
 		"olist",
 		"1234",
@@ -52,7 +48,7 @@ func main() {
 	author.LoadCsv(*csvName)
 
 	srv := newServer(&author, book)
-	fmt.Printf("Up apllication at port %s\n", *port)
+	fmt.Printf("Up apllication at port %s\n", "8092")
 	panic(srv.ListenAndServe())
 }
 
@@ -61,7 +57,7 @@ func newServer(a *business.Author, b business.Book) *http.Server {
 	api.SetUpRoutes(r, a, b)
 
 	srv := http.Server{
-		Addr:    fmt.Sprintf(":%s", *port),
+		Addr:    fmt.Sprintf(":%s", "8092"),
 		Handler: r,
 	}
 

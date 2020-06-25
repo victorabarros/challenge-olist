@@ -1,6 +1,7 @@
 package api
 
 import (
+	"encoding/json"
 	"net/http"
 
 	"github.com/gorilla/mux"
@@ -20,6 +21,15 @@ func SetUpRoutes(r *mux.Router, a *business.Author, b business.Book) {
 	// TODO add liveness and probeness
 }
 
+// TODO move to utils
 type response struct {
 	Message string `json:"message"`
+}
+
+// TODO move to utils
+func writeServiceError(w http.ResponseWriter) {
+	// TODO log error
+	w.WriteHeader(http.StatusServiceUnavailable)
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(response{"Fail connection on DB."})
 }

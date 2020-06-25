@@ -30,9 +30,7 @@ func createBook(b business.Book) http.HandlerFunc {
 
 		err = b.Create(book)
 		if err != nil {
-			w.WriteHeader(http.StatusServiceUnavailable)
-			w.Header().Set("Content-Type", "application/json")
-			json.NewEncoder(w).Encode(response{"Fail connection on DB."})
+			writeServiceError(w)
 			return
 		}
 
@@ -45,7 +43,6 @@ func createBook(b business.Book) http.HandlerFunc {
 // listBooks return list
 func listBooks(b business.Book) http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
-		// TODO rota não está funcnionando
 		fmt.Println("Starting \"listBooks\" route")
 
 		filters, err := extractFilters(req)
@@ -60,9 +57,7 @@ func listBooks(b business.Book) http.HandlerFunc {
 
 		switch {
 		case err != nil:
-			w.WriteHeader(http.StatusServiceUnavailable)
-			w.Header().Set("Content-Type", "application/json")
-			json.NewEncoder(w).Encode(response{"Fail connection on DB."})
+			writeServiceError(w)
 			return
 		case books == nil: // TODO or len(books) == 0
 			w.WriteHeader(http.StatusNotFound)
@@ -77,6 +72,7 @@ func listBooks(b business.Book) http.HandlerFunc {
 
 func extractFilters(req *http.Request) (f filters, err error) {
 	// jsonschema validator https://github.com/xeipuuv/gojsonschema
+	f = filters{}
 	params := req.URL.Query()
 	var e error
 
@@ -148,20 +144,22 @@ func putBook(b business.Book) http.HandlerFunc {
 		var err error
 		params := mux.Vars(req)
 		bookID, _ := strconv.Atoi(params["id"])
-		// TODO check if bookID exist! bug http://localhost:8092/books/1091
+
+		if !checkBook(b, bookID, w) {
+			return
+		}
 
 		book := database.Book{}
 		err = json.NewDecoder(req.Body).Decode(&book)
 
 		if book.Edition == 0 {
-			// TODO should use err.Error()?
-			err = fmt.Errorf("%s\r\n%s", err, "edition can't be null.")
+			err = fmt.Errorf("%s\r\n%s", err.Error(), "edition can't be null.")
 		}
 		if book.PublicationYear == 0 {
-			err = fmt.Errorf("%s\r\n%s", err, "publication_year can't be null.")
+			err = fmt.Errorf("%s\r\n%s", err.Error(), "publication_year can't be null.")
 		}
 		if book.Authors == nil || len(book.Authors) == 0 {
-			err = fmt.Errorf("%s\r\n%s", err, "authors can't be null or empty.")
+			err = fmt.Errorf("%s\r\n%s", err.Error(), "authors can't be null or empty.")
 		}
 
 		if err != nil {
@@ -183,8 +181,8 @@ func putBook(b business.Book) http.HandlerFunc {
 
 		w.WriteHeader(http.StatusOK)
 		w.Header().Set("Content-Type", "application/json")
-		// TODO improve message response
-		json.NewEncoder(w).Encode(bookID)
+		json.NewEncoder(w).Encode(
+			response{fmt.Sprintf("Book id '%d' updated with success", bookID)})
 	}
 }
 
@@ -196,7 +194,10 @@ func patchBook(b business.Book) http.HandlerFunc {
 		var err error
 		params := mux.Vars(req)
 		bookID, _ := strconv.Atoi(params["id"])
-		// TODO check if bookID exists, if not: status not found
+
+		if !checkBook(b, bookID, w) {
+			return
+		}
 
 		book := database.Book{}
 		err = json.NewDecoder(req.Body).Decode(&book)
@@ -215,17 +216,14 @@ func patchBook(b business.Book) http.HandlerFunc {
 
 		err = b.PartialUpdate(book)
 		if err != nil {
-			// TODO log error
-			w.WriteHeader(http.StatusServiceUnavailable)
-			w.Header().Set("Content-Type", "application/json")
-			json.NewEncoder(w).Encode(response{"Fail connection on DB."})
+			writeServiceError(w)
 			return
 		}
 
 		w.WriteHeader(http.StatusOK)
 		w.Header().Set("Content-Type", "application/json")
-		// TODO improve message response
-		json.NewEncoder(w).Encode(bookID)
+		json.NewEncoder(w).Encode(response{
+			fmt.Sprintf("Book id '%d' partial updated with success", bookID)})
 	}
 }
 
@@ -236,17 +234,33 @@ func deleteBook(b business.Book) http.HandlerFunc {
 
 		params := mux.Vars(req)
 		bookID, _ := strconv.Atoi(params["id"])
-		// TODO É necessário validar se o bookID existe? status not found
+
+		if !checkBook(b, bookID, w) {
+			return
+		}
 
 		err := b.Delete(bookID)
 		if err != nil {
-			// TODO log error
-			w.WriteHeader(http.StatusServiceUnavailable)
-			w.Header().Set("Content-Type", "application/json")
-			json.NewEncoder(w).Encode(response{"Fail connection on DB."})
+			writeServiceError(w)
 			return
 		}
 
 		w.WriteHeader(http.StatusNoContent)
 	}
+}
+
+func checkBook(b business.Book, id int, w http.ResponseWriter) bool {
+	bookCheck, err := b.Get(id)
+	if err != nil {
+		writeServiceError(w)
+		return false
+	} else if bookCheck == nil {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(
+			fmt.Sprintf("Book id '%d' doesn't exist", id))
+		return false
+	}
+
+	return true
 }

@@ -15,22 +15,26 @@ type Book struct {
 // Create inserts new book to db
 func (b *Book) Create(book database.Book) error {
 	for _, id := range book.Authors {
-		// TODO chegar se authores existe no banco
-		// db.GetAuthorByID(id)
-		fmt.Println(id)
+		// TODO mover esta validação para camada anterior, para tratar a resposta adequadamente
+		a, err := b.DB.GetAuthorByID(id)
+		if err != nil {
+			// 503
+			return err
+		} else if a == nil {
+			// 400
+			return fmt.Errorf("Author id %d doesn't exist", id)
+		}
 	}
 
-	// TODO Validar se o livro já não existe
 	id, err := b.DB.InsertBook(book)
 	if err != nil {
 		return err
 	}
 
 	book.ID = int(id)
-	// TODO how make both insertions at same time
+
 	err = b.DB.InsertBookAuthors(book.ID, book.Authors)
 	if err != nil {
-		// handler if authorid doesn't exist, neste caso retornar 400 to client
 		return err
 	}
 	return nil
@@ -38,7 +42,6 @@ func (b *Book) Create(book database.Book) error {
 
 // List books after filter
 func (b *Book) List(filters map[string][]string) ([]database.Book, error) {
-	// TODO investigar bug http://localhost:8092/books?name=gopl&author= resposta 503
 	ans, err := b.DB.ListBooks(filters)
 	if err != nil {
 		return nil, err
@@ -47,7 +50,6 @@ func (b *Book) List(filters map[string][]string) ([]database.Book, error) {
 	books := ans
 
 	for idx, book := range books {
-		// TODO fazer essa busca usando business.Author
 		authors, _ := b.DB.GetAuthorsIDByBookID(book.ID)
 		books[idx].Authors = authors
 	}
@@ -91,8 +93,6 @@ func (b *Book) Update(book database.Book) error {
 	if err != nil {
 		return err
 	}
-	// TODO é possível executar tudo numa transação só?
-	// Minimizando a chance de erro
 
 	return nil
 }
@@ -105,8 +105,6 @@ func (b *Book) PartialUpdate(book database.Book) error {
 	}
 
 	if book.Authors != nil && len(book.Authors) != 0 {
-		// TODO improve this update.
-		// Is possible make with only one connection?
 		err = b.DB.DeleteBookAuthors(book.ID)
 		if err != nil {
 			return err
