@@ -1,4 +1,4 @@
-package configutarion
+package configuration
 
 import (
 	"fmt"
@@ -6,14 +6,14 @@ import (
 	"github.com/spf13/viper"
 )
 
-// Config summarises all environment variables.
+// Config summarises environment variables.
 type Config struct {
 	Database Database `mapstructure:",squash"`
 	Server   Server   `mapstructure:",squash"`
 	LogLevel string   `mapstructure:"log_level"`
 }
 
-// Database summarises all Database variables.
+// Database summarises Database variables.
 type Database struct {
 	Driver   string `mapstructure:"database_driver"`
 	Host     string `mapstructure:"database_host"`
@@ -24,7 +24,7 @@ type Database struct {
 	DSN string
 }
 
-// Server summarises all Server variables.
+// Server summarises Server variables.
 type Server struct {
 	Port int `mapstructure:"port"`
 }
@@ -33,7 +33,7 @@ var (
 	cfg *Config
 )
 
-// Load return all environment variables loaded.
+// Load return environment variables loaded.
 func Load() (*Config, error) {
 	if cfg != nil {
 		return cfg, nil
