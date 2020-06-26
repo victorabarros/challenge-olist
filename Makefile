@@ -27,3 +27,18 @@ run:
 # Como repassar a flag do comando?
 	docker run -v ${PWD}:${APP_DIR} -w ${APP_DIR} \
 		-p 8092:8092 --name ${APP_NAME} golang go run main.go
+
+test:
+	docker run -v ${PWD}:${APP_DIR} -w ${APP_DIR} \
+		--env-file .env golang:1.14.2 \
+		go test ./... -v -cover -race -coverprofile=c.out
+
+test-log:
+	@rm -rf dev/tests*.log
+	@make test > dev/tests.log
+	@cat dev/tests.log  | grep "coverage: " > dev/tests-summ.log
+
+test-html-coverage:
+	@rm -rf c.out
+	@make test
+	@go tool cover -html=c.out

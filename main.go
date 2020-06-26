@@ -8,8 +8,10 @@ import (
 
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/gorilla/mux"
+	"github.com/sirupsen/logrus"
 	"github.com/victorabarros/challenge-olist/api"
 	"github.com/victorabarros/challenge-olist/business"
+	"github.com/victorabarros/challenge-olist/internal/configuration"
 	"github.com/victorabarros/challenge-olist/internal/database"
 )
 
@@ -20,20 +22,18 @@ var (
 func main() {
 	flag.Parse() // `go run main.go -h` for help flag
 
+	cfg, err := configuration.Load()
+	if err != nil {
+		logrus.WithError(err).Fatal("Error in load Enviromnts variables.")
+	}
+
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	// TODO use internal/configuration
-	// TODO set loglevel
-	dsn := fmt.Sprintf("%s:%s@tcp(%s)/%s",
-		"olist",
-		"1234",
-		"127.0.0.1:8093",
-		"olist")
-
-	db, err := database.NewDatabase(ctx, "mysql", dsn)
+	db, err := database.NewDatabase(ctx, "mysql", cfg.Database.DSN)
 	defer db.Connection.Close()
 	if err != nil {
+		// TODO log.fatal
 		panic(err)
 	}
 
