@@ -2,6 +2,10 @@ package business
 
 import "testing"
 
+var (
+	author = Author{}
+)
+
 func testDeduplucation(t *testing.T) {
 	cases := []struct {
 		arr  []string

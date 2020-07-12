@@ -46,6 +46,7 @@ func validateListParams(req *http.Request) (
 	limit int, offset int, names []string, err error) {
 	// TODO can merge with filters from books?
 	// jsonschema validator https://github.com/xeipuuv/gojsonschema
+	// https://json-schema.org/implementations.html#validator-go
 	params := req.URL.Query()
 
 	names, prs := params["name"]

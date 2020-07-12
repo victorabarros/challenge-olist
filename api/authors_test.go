@@ -10,7 +10,7 @@ func testValidateListParams(t *testing.T) {
 	u := url.URL{}
 	u.RawQuery = "name=oi&limit=10&offset=0"
 	req := http.Request{URL: &u}
-	params := req.URL.Query()
+	// params := req.URL.Query()
 
 	cases := []struct {
 		queryParam string
